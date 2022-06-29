@@ -9,7 +9,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -237,10 +236,12 @@ func PutBook(rw http.ResponseWriter, req *http.Request) {
 	}
 	if book.Title == "" {
 		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Println("test case failed at books title: %s", book.Title)
 		return
 	}
 	if !(book.Publication == "Penguin" || book.Publication == "Arihant" || book.Publication == "Scholastic") {
 		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Println("test case failed at books publication: %s", book.Publication)
 		return
 	}
 
@@ -251,6 +252,7 @@ func PutBook(rw http.ResponseWriter, req *http.Request) {
 	yr, _ := strconv.Atoi(publicationDate[2])
 	if yr > time.Now().Year() || yr < 1880 {
 		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Println("Test case failed at published data")
 		return
 	}
 
@@ -263,7 +265,8 @@ func PutBook(rw http.ResponseWriter, req *http.Request) {
 
 	result, err := db.Query("SELECT Id FROM Author WHERE Id = ?", book.Author.Id)
 	if err != nil {
-		log.Print(err)
+		rw.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	if !result.Next() {
@@ -284,13 +287,14 @@ func PutBook(rw http.ResponseWriter, req *http.Request) {
 
 	result, err = db.Query("UPDATE Books SET Title = ? ,Publication = ? ,PublishedDate=?  WHERE id =?", book.Title, book.Publication, book.PublishedDate, book.Id)
 	if err != nil {
-		log.Print(err)
+		rw.WriteHeader(http.StatusCreated)
+		return
 	}
 
 }
 
 func PutAuthor(rw http.ResponseWriter, req *http.Request) {
-	fmt.Println("Hii")
+
 	db := DbConnect()
 	var author Author
 	body, err := io.ReadAll(req.Body)
@@ -307,7 +311,6 @@ func PutAuthor(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	fmt.Println(author)
 
 	params := mux.Vars(req)
 	ID, err := strconv.Atoi(params["id"])
@@ -315,7 +318,7 @@ func PutAuthor(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	fmt.Println(params)
+
 	res, err := db.Query("SELECT Id FROM Author WHERE Id = ?", ID)
 	if err != nil {
 		log.Print(err)
@@ -325,7 +328,7 @@ func PutAuthor(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	fmt.Println("Hello")
+
 	var id int
 	err = res.Scan(&id)
 	if err != nil {
@@ -338,14 +341,13 @@ func PutAuthor(rw http.ResponseWriter, req *http.Request) {
 		log.Print(err)
 		return
 	}
-	rw.WriteHeader(http.StatusOK)
+	rw.WriteHeader(http.StatusCreated)
 
 }
 
 func DeleteBook(rw http.ResponseWriter, req *http.Request) {
 
 	db := DbConnect()
-	fmt.Println(db)
 	vars := mux.Vars(req)
 	id, err := strconv.Atoi(vars["id"])
 	//ok status ?
@@ -362,12 +364,11 @@ func DeleteBook(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Print("book not exist")
 	}
-	fmt.Println("Hey")
+	rw.WriteHeader(http.StatusNoContent)
 }
 
 func DeleteAuthor(rw http.ResponseWriter, req *http.Request) {
 	db := DbConnect()
-	fmt.Println(db)
 	params := mux.Vars(req)
 
 	id, err := strconv.Atoi(params["id"])
@@ -376,23 +377,26 @@ func DeleteAuthor(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	fmt.Println(reflect.TypeOf(id))
+	//fmt.Println(reflect.TypeOf(id))
 
 	check, err := db.Prepare("delete from Author WHERE Id=?")
 	if err != nil {
-
 		rw.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	res, err := check.Exec(id)
 	if err != nil {
-		fmt.Println(err)
+		rw.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	_, err = res.RowsAffected()
 	if err != nil {
-		fmt.Println("last comment!!!")
+		rw.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
+	rw.WriteHeader(http.StatusNoContent)
 }
 
 func main() {
