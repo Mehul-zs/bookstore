@@ -68,12 +68,16 @@ func GetBook(rw http.ResponseWriter, req *http.Request) {
 	//json.NewEncoder(rw).Encode([]Books{{1, "Mehul", nil, "Penguin", "10/08/2000"}, {2, "Mehul", nil, "Penguin", "10/08/2000"}}) // for manual testing
 	db := DbConnect()
 	title := req.URL.Query().Get("Title")
+	getAuthor := req.URL.Query().Get("getauthor")
+	//fmt.Println(reflect.TypeOf(title))
+	//fmt.Println("hemlo")
+	//fmt.Println(getAuthor)
 	var rows *sql.Rows
 	var err error
 	if title == "" {
 		rows, err = db.Query("select * from Books;")
 	} else {
-		rows, err = db.Query("select * from Books where title=?;", title)
+		rows, err = db.Query("select * from Books where Title=?;", title)
 	}
 	if err != nil {
 		log.Print(err)
@@ -81,18 +85,26 @@ func GetBook(rw http.ResponseWriter, req *http.Request) {
 	var books []Books
 	for rows.Next() {
 		book := Books{}
-		err = rows.Scan(&book.Id, &book.Title, &book.Publication, &book.PublishedDate)
+		err = rows.Scan(&book.Id, &book.Title, &book.Publication, &book.PublishedDate, &book.Author.Id)
 		if err != nil {
 			log.Print(err)
 		}
-		getAuthor := req.URL.Query().Get("GetAuthor")
+		fmt.Println("Hi")
 		if getAuthor == "true" {
+			fmt.Println("Hello")
 			row := db.QueryRow("SELECT * from Author WHERE Id=? ", book.Author.Id)
-			row.Scan(&book.Author.Id, &book.Author.FirstName, &book.Author.LastName, &book.Author.Dob, &book.Author.PenName)
+			err = row.Scan(&book.Author.Id, &book.Author.FirstName, &book.Author.LastName, &book.Author.Dob, &book.Author.PenName)
+			if err != nil {
+				fmt.Println("GG")
+				log.Fatal(err)
+			}
 		}
 		books = append(books, book)
 	}
-	json.NewEncoder(rw).Encode(books)
+	err = json.NewEncoder(rw).Encode(books)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+	}
 
 }
 
@@ -105,28 +117,27 @@ func GetBookById(rw http.ResponseWriter, req *http.Request) {
 	}
 	fmt.Println(`id: `, id)
 
-	var rows *sql.Rows
-	var err error
-	if id == "" {
-		rows, err = db.Query("select * from Books;", id)
-	} else {
-		rows, err = db.Query("select * from Books where id=?;", id)
+	bookrow := db.QueryRow("select * from Books where Id=?;", id)
+	book := Books{}
+	err := bookrow.Scan(&book.Id, &book.Title, &book.Publication, &book.PublishedDate, &book.Author.Id)
 
-	}
 	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		//json.NewEncoder(rw).Encode(book)
+		return
+		//log.Print(err)
+		//if err == sql.ErrNoRows {
+		//	rw.WriteHeader(404)
+		//	return
+		//}
+	}
+	authrow := db.QueryRow("select * from Author where Id=?;", book.Author.Id)
+	err = authrow.Scan(&book.Author.Id, &book.Author.FirstName, &book.Author.LastName, &book.Author.Dob, &book.Author.PenName)
+	if err != nil {
+		fmt.Println("Error")
 		log.Print(err)
 	}
-	var books []Books
-	for rows.Next() {
-		book := Books{}
-		err = rows.Scan(&book.Id, &book.Title, &book.Publication, &book.PublishedDate)
-		if err != nil {
-			log.Print(err)
-		}
-
-		books = append(books, book)
-	}
-	json.NewEncoder(rw).Encode(books)
+	//json.NewEncoder(rw).Encode(book)
 
 }
 
@@ -223,6 +234,9 @@ func PostByBook(rw http.ResponseWriter, req *http.Request) {
 			return
 		}
 		authId, err = res.LastInsertId()
+		if err != nil {
+			rw.WriteHeader(http.StatusBadRequest)
+		}
 	}
 	fmt.Println("last, Hello Mehul")
 
@@ -252,12 +266,10 @@ func PutBook(rw http.ResponseWriter, req *http.Request) {
 	}
 	if book.Title == "" {
 		rw.WriteHeader(http.StatusBadRequest)
-		fmt.Println("test case failed at books title: %s", book.Title)
 		return
 	}
 	if !(book.Publication == "Penguin" || book.Publication == "Arihant" || book.Publication == "Scholastic") {
 		rw.WriteHeader(http.StatusBadRequest)
-		fmt.Println("test case failed at books publication: %s", book.Publication)
 		return
 	}
 
@@ -268,7 +280,6 @@ func PutBook(rw http.ResponseWriter, req *http.Request) {
 	yr, _ := strconv.Atoi(publicationDate[2])
 	if yr > time.Now().Year() || yr < 1880 {
 		rw.WriteHeader(http.StatusBadRequest)
-		fmt.Println("Test case failed at published data")
 		return
 	}
 
@@ -278,8 +289,11 @@ func PutBook(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+	}
 
-	result, err := db.Query("SELECT Id FROM Author WHERE Id = ?", ID)
+	result, err := db.Query("SELECT Id FROM Author WHERE Id = ?", book.Author.Id)
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
@@ -301,7 +315,7 @@ func PutBook(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	result, err = db.Query("UPDATE Books SET Id=?, Title = ? ,Publication = ? ,PublishedDate=?  WHERE id =?", ID, book.Title, book.Publication, book.PublishedDate, book.Id)
+	_, err = db.Query("UPDATE Books SET Id=?, Title = ? ,Publication = ? ,PublishedDate=?  WHERE Id =?", ID, book.Title, book.Publication, book.PublishedDate, ID)
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
@@ -336,6 +350,9 @@ func PutAuthor(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+	}
 
 	res, err := db.Query("SELECT Id FROM Author WHERE Id = ?", ID)
 	if err != nil {
@@ -354,7 +371,7 @@ func PutAuthor(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	_, err = db.Exec("UPDATE Author SET FirstName = ?, LastName = ?, Dob = ? , PenName = ?, Id=?  WHERE Id =?", author.FirstName, author.LastName, author.Dob, author.PenName, ID, ID)
+	_, err = db.Exec("UPDATE Author SET FirstName = ?, LastName = ?, Dob = ? , PenName = ?, Id=?  WHERE Id =?", author.FirstName, author.LastName, author.Dob, author.PenName, author.Id, ID)
 	if err != nil {
 		log.Print(err)
 		return
@@ -408,6 +425,9 @@ func DeleteAuthor(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	check, err := db.Query("Select Id from Books WHERE AuthorId=?", Id)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+	}
 
 	for check.Next() {
 		var id int
@@ -448,8 +468,7 @@ func main() {
 	//
 	r.HandleFunc("/deleteBook/{id}", DeleteBook).Methods(http.MethodDelete)
 	r.HandleFunc("/deleteAuthor/{id}", DeleteAuthor).Methods(http.MethodDelete)
-	fmt.Println("Hey Mehul!")
-	//r.HandleFunc("/PutBook")
+	//fmt.Println("Hey Mehul!")
 
 	Server := http.Server{
 		Addr:    ":5000",
