@@ -265,7 +265,7 @@ func TestDeleteBook(t *testing.T) {
 func TestDeleteAuthor(t *testing.T) {
 	testcases := []struct {
 		desc        string
-		inputMethod string
+		inputMethod string q
 		target      string
 		expected    int
 	}{
