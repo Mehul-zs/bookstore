@@ -15,7 +15,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func DBConn() (*sql.DB, error) {
+func DbConn() (*sql.DB, error) {
 	db, err := sql.Open("mysql", "root"+":"+"HelloMehul1@"+"@tcp(localhost:3306)"+"/"+"BookStore")
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func DBConn() (*sql.DB, error) {
 func main() {
 	r := mux.NewRouter()
 
-	db, err := DBConn()
+	db, err := DbConn()
 	if err != nil {
 		return
 	}
@@ -39,8 +39,8 @@ func main() {
 
 	////fmt.Println("Hey Mehul!")
 
-	aurthorstore := datastoreAuthor.New(db)
-	serviceauth := serviceAuthor.New(aurthorstore)
+	authorstore := datastoreAuthor.New(db)
+	serviceauth := serviceAuthor.New(authorstore)
 	handlerauthor := handlerAuthor.New(serviceauth)
 	http.HandleFunc("/author", handlerauthor.Handler)
 

@@ -1,82 +1,52 @@
-package datastoreBook
+package serviceBook
 
 import (
+	"Bookstore"
 	"Bookstore/entities"
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
 	"testing"
 )
 
-func TestBookstore_GetAll(t *testing.T) {
+func TestServiceBook_GetAll(t *testing.T) {
 	testcases := []struct {
-		desc   string
+		input  entities.Books
 		output []entities.Books
-	}{
-		{"Validated", []entities.Books{{
-			Id:    1,
-			Title: "James",
-			Author: entities.Author{
-				Id:        1,
-				FirstName: "Mehul",
-				LastName:  "Gupta",
-				Dob:       "12/02/1970",
-				PenName:   "Me",
-			},
-			Publication:   "Penguin",
-			PublishedDate: "12/07/1999",
-		}},
-		},
-	}
+	}{}
 
 	for _, tc := range testcases {
-		DB, err := Bookstore.DbConn()
-		if err != nil {
-			fmt.Println("Db connection Error")
-		}
-		bookStore := New(DB)
 
-		chk, err := bookStore.GetAll()
-
-		if err != nil {
-			t.Errorf("Test case failed %v", tc.desc)
-		}
-
-		if !reflect.DeepEqual(chk, tc.output) {
-			t.Errorf("Test case failed; %s", err)
-		}
 	}
+
 }
 
-func TestBookstore_GetByID(t *testing.T) {
+func TestServiceBook_GetByID(t *testing.T) {
 	testcases := []struct {
-		desc   string
 		input  int
-		expOut entities.Books
-		err    error
+		output entities.Books
 	}{
-		{"Valid book Id", 1, entities.Books{1, "james", entities.Author{FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "Me"}, "Penguin", "12/01/2020"}, errors.New("Sucess, status Ok!")},
-		{"Invalid book Id", -2, entities.Books{}, errors.New("invalid ID")},
+		{},
 	}
+
 	for _, tc := range testcases {
 
-		DB := Bookstore.DbConn()
+		a := New(mockDatastore{})
+
+		ans, err := a.GetByID(tc.input)
 		if err != nil {
-			fmt.Println("Db connection Error")
+			t.Errorf("Test case failed %s", tc.input)
 		}
-		bookStore := New(DB)
 
-		chk, err := bookStore.GetByID(tc.input)
-
-		if chk != tc.expOut {
-			t.Errorf("Test case failed; %s", err)
+		if ans != tc.output {
+			t.Errorf("[TEST%d]Failed. Got %v\tExpected %v\n", tc.output, ans)
 		}
+
 	}
-
 }
 
-func TestBookstore_PostBook(t *testing.T) {
+func TestServiceBook_PostBook(t *testing.T) {
+
 	testcases := []struct {
 		desc string
 		req  entities.Books
@@ -103,8 +73,7 @@ func TestBookstore_PostBook(t *testing.T) {
 
 }
 
-func TestBookstore_DeleteBook(t *testing.T) {
-
+func TestServiceBook_DeleteBook(t *testing.T) {
 	testcases := []struct {
 		desc  string
 		input int
@@ -128,5 +97,27 @@ func TestBookstore_DeleteBook(t *testing.T) {
 			t.Errorf("failed for %v\n", tc.desc)
 		}
 	}
+
+}
+
+type mockDatastore struct{}
+
+func (m mockDatastore) getAll(books entities.Books) (entities.Books, error) {
+
+}
+
+func (m mockDatastore) getById(id int) (entities.Books, error) {
+
+}
+
+func (m mockDatastore) postBook(books entities.Books) (entities.Books, error) {
+
+}
+
+func (m mockDatastore) putBook(books entities.Books) (entities.Books, error) {
+
+}
+
+func (m mockDatastore) deleteBook(id int) (entities.Books, error) {
 
 }

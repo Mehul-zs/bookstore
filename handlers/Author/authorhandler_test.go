@@ -3,7 +3,6 @@ package handlerAuthor
 import (
 	"Bookstore/entities"
 	"bytes"
-	"github.com/gorilla/mux"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -37,9 +36,7 @@ func TestPostAuthor(t *testing.T) {
 		reqBody  []byte
 		respBody []byte
 	}{
-		{[]byte(`{"FirstName":"Mehul","LastName":"", "Dob":"18/07/2000", "PenName":"Me"}`), []byte(`could not create animal`)},
-		//{[]byte(`{"Name":"Maggie","Age":10}`), []byte(`{"ID":12,"Name":"Maggie","Age":10}`)},
-		//{[]byte(`{"Name":"Maggie","Age":"10"}`), []byte(`invalid body`)},
+		{[]byte(`{"FirstName":"Mehul","LastName":"", "Dob":"18/07/2000", "PenName":"Me"}`), []byte(`{"FirstName":"Mehul","LastName":"", "Dob":"18/07/2000", "PenName":"Me"}`)},
 	}
 	for i, v := range testcases {
 		req := httptest.NewRequest("GET", "/author", bytes.NewReader(v.reqBody))
@@ -64,38 +61,33 @@ func DeleteAuthor(t *testing.T) {
 		{"-1", http.StatusBadRequest},
 		{"1", http.StatusNoContent},
 	}
-	for _, v := range testcases {
+	for i, v := range testcases {
 		req := httptest.NewRequest("DELETE", v.ID, nil)
 		w := httptest.NewRecorder()
 
-
 		a := New(mockDatastore{})
 
-		a.PostAuthor(w, req)
+		a.DeleteAuthor(w, req)
 
-
-
+		if !reflect.DeepEqual(w.Result().StatusCode, v.expStatus) {
+			t.Errorf("Test case failed")
+		}
 
 	}
 }
-
-
-
-func PutAuthor(t *testing.T){
-	testcases:= []struct{
-		input  []byte
-		author []byte
-		expStatus int
-	}
-}
-
-
-
 
 type mockDatastore struct{}
 
-func (m mockDatastore) PostAuthor(animal entities.Author) (entities.Author, error) {
+func (m mockDatastore) PostAuthor(a entities.Author) (entities.Author, error) {
 
 	return entities.Author{}, nil
 
+}
+
+func (m mockDatastore) PutAuthor(a entities.Author) (int64, error) {
+	return 0, nil
+}
+
+func (m mockDatastore) DeleteAuthor(id int) (int64, error) {
+	return 0, nil
 }
