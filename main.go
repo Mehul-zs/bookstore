@@ -1,4 +1,4 @@
-package Bookstore
+package main
 
 import (
 	datastoreAuthor "Bookstore/datastores/Author"
@@ -8,6 +8,8 @@ import (
 	"Bookstore/services/serviceAuthor"
 	"Bookstore/services/serviceBook"
 	"database/sql"
+	"fmt"
+	"log"
 
 	"net/http"
 
@@ -16,16 +18,22 @@ import (
 )
 
 func DbConn() (*sql.DB, error) {
-	db, err := sql.Open("mysql", "root"+":"+"HelloMehul1@"+"@tcp(localhost:3306)"+"/"+"BookStore")
+	db, err := sql.Open("mysql", "root"+":"+"HelloMehul1@"+"@tcp(localhost:3306)"+"/"+"bookstore")
 	if err != nil {
 		return nil, err
 	}
+
+	chk := db.Ping()
+	if chk != nil {
+		fmt.Println("Error, connection not established")
+		return nil, nil
+	}
+	fmt.Println("Connection establsied")
 
 	return db, nil
 }
 
 func main() {
-	r := mux.NewRouter()
 
 	db, err := DbConn()
 	if err != nil {
@@ -35,17 +43,35 @@ func main() {
 	bookstore := datastoreBook.New(db)
 	servicebook := serviceBook.New(bookstore)
 	handlerbook := handlerBook.New(servicebook)
-	http.HandleFunc("/book", handlerbook.Handler)
 
 	////fmt.Println("Hey Mehul!")
 
 	authorstore := datastoreAuthor.New(db)
 	serviceauth := serviceAuthor.New(authorstore)
 	handlerauthor := handlerAuthor.New(serviceauth)
-	http.HandleFunc("/author", handlerauthor.Handler)
+	fmt.Println("Hello main")
 
-	err = http.ListenAndServe(":5000", r)
-	if err != nil {
-		return
+	r := mux.NewRouter()
+	fmt.Println(db)
+
+	r.HandleFunc("/books", handlerbook.GetAll).Methods(http.MethodGet)
+	r.HandleFunc("/books/{id}", handlerbook.GetByID).Methods(http.MethodGet)
+
+	r.HandleFunc("/author", handlerauthor.PostAuthor).Methods(http.MethodPost)
+	r.HandleFunc("/book", handlerbook.PostBook).Methods(http.MethodPost)
+
+	r.HandleFunc("/author/{id}", handlerauthor.PutAuthor).Methods(http.MethodPut)
+	r.HandleFunc("/books/{id}", handlerbook.PutBook).Methods(http.MethodPut)
+	//
+	r.HandleFunc("/deleteBook/{id}", handlerbook.DeleteBook).Methods(http.MethodDelete)
+	r.HandleFunc("/deleteAuthor/{id}", handlerauthor.DeleteAuthor).Methods(http.MethodDelete)
+	//fmt.Println("Hey Mehul!")
+
+	Server := http.Server{
+		Addr:    ":5000",
+		Handler: r,
 	}
+
+	fmt.Println("Server started at 5000")
+	log.Fatal(Server.ListenAndServe())
 }

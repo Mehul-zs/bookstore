@@ -1,4 +1,4 @@
-package handlerAuthor
+package handlerauthor
 
 import (
 	"Bookstore/entities"

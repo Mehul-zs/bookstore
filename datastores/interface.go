@@ -5,15 +5,15 @@ import (
 )
 
 type BookStore interface {
-	GetAll(books entities.Books) ([]entities.Books, error)
-	GetByID(books entities.Books) (entities.Books, error)
+	GetAll() ([]entities.Books, error)
+	GetByID(int) (entities.Books, error)
 	PostBook(books entities.Books) (int64, error)
-	DeleteBook(books entities.Books) (int64, error)
-	PutBook(books entities.Books) (int64, error)
+	PutBook(books entities.Books, id int) (entities.Books, error)
+	DeleteBook(int) (int64, error)
 }
 
 type AuthorStore interface {
-	PostAuthor(author entities.Author) (int64, error)
+	PostAuthor(author entities.Author) (entities.Author, error)
+	PutAuthor(author entities.Author) (entities.Author, error)
 	DeleteAuthor(int) (int64, error)
-	PutAuthor(author entities.Author) (int64, error)
 }

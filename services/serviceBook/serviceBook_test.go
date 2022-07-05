@@ -1,7 +1,6 @@
 package serviceBook
 
 import (
-	"Bookstore"
 	"Bookstore/entities"
 	"errors"
 	"fmt"
@@ -57,7 +56,7 @@ func TestServiceBook_PostBook(t *testing.T) {
 	}
 	for _, tc := range testcases {
 
-		DB, err := Bookstore.DbConn()
+		DB, err := main.DbConn()
 		if err != nil {
 			fmt.Println("Db connection Error")
 		}
@@ -85,7 +84,7 @@ func TestServiceBook_DeleteBook(t *testing.T) {
 
 	for _, tc := range testcases {
 
-		DB, err := Bookstore.DbConn()
+		DB, err := main.DbConn()
 		if err != nil {
 			fmt.Println("Db connection Error")
 		}

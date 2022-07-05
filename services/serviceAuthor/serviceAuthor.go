@@ -2,7 +2,6 @@ package serviceAuthor
 
 import (
 	datastore "Bookstore/datastores"
-	datastoreAuthor "Bookstore/datastores/Author"
 	"Bookstore/entities"
 	"errors"
 )
@@ -11,17 +10,18 @@ type ServiceAuthor struct {
 	authorstore datastore.AuthorStore
 }
 
-func New(author datastoreAuthor.Authorstore) ServiceAuthor {
-	return ServiceAuthor{authorstore: author}
+func New(a datastore.AuthorStore) ServiceAuthor {
+	return ServiceAuthor{a}
 }
 
-func checkDob(Dob string) bool {
-	return false
-}
+//func checkDob(Dob string) bool {
+//
+//	return false
+//}
 
 func (s ServiceAuthor) PostAuthor(a entities.Author) (int64, error) {
 
-	if a.FirstName == "" || !checkDob(a.Dob) {
+	if a.FirstName == "" {
 		return 0, errors.New("not valid constraints")
 	}
 
@@ -30,21 +30,22 @@ func (s ServiceAuthor) PostAuthor(a entities.Author) (int64, error) {
 		return 0, err
 	}
 
-	return id, nil
+	return id, nil // check and think whether id is returned or http status request
 	//return 0, nil
 }
 
-func (s ServiceAuthor) PutAuthor(a entities.Author) (int64, error) {
-	if a.FirstName == "" || !checkDob(a.Dob) {
-		return 0, errors.New("not valid constraints")
+func (s ServiceAuthor) PutAuthor(a entities.Author) (entities.Author, error) {
+
+	if a.FirstName == "" {
+		return entities.Author{}, errors.New("not valid constraints")
 	}
 
-	id, err := s.authorstore.PostAuthor(a)
+	author, err := s.authorstore.PutAuthor(a)
 	if err != nil {
-		return 0, err
+		return entities.Author{}, err
 	}
 
-	return id, nil
+	return author, nil
 	//return entities.Author{}
 }
 

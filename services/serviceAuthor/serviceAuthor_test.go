@@ -1,7 +1,6 @@
 package serviceAuthor
 
 import (
-	"Bookstore"
 	"Bookstore/entities"
 	"fmt"
 	"log"
@@ -19,7 +18,7 @@ func TestPostAuthor(t *testing.T) (int, error) {
 	}
 	for _, tc := range testcases {
 
-		DB, err := Bookstore.DbConn()
+		DB, err := main.DbConn()
 		if err != nil {
 			fmt.Println("database connection error")
 		}
@@ -51,7 +50,7 @@ func TestDeleteAuthor(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		DB, error := Bookstore.DbConn()
+		DB, error := main.DbConn()
 		authorStore := author.New(DB)
 		authorService := New(authorStore)
 
