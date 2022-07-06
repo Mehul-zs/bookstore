@@ -79,7 +79,7 @@ func (a AuthorHandler) DeleteAuthor(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	resp, err := a.serviceAuthor.DeleteAuthor(id)
+	_, err = a.serviceAuthor.DeleteAuthor(id)
 	if err != nil {
 		_, _ = rw.Write([]byte("Error in Delete method"))
 		rw.WriteHeader(http.StatusInternalServerError)
