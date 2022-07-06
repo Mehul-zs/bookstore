@@ -4,6 +4,7 @@ import (
 	datastore "Bookstore/datastores"
 	"Bookstore/entities"
 	"errors"
+	"net/http"
 )
 
 type ServiceAuthor struct {
@@ -25,12 +26,12 @@ func (s ServiceAuthor) PostAuthor(a entities.Author) (int64, error) {
 		return 0, errors.New("not valid constraints")
 	}
 
-	id, err := s.authorstore.PostAuthor(a)
+	_, err := s.authorstore.PostAuthor(a)
 	if err != nil {
-		return 0, err
+		return http.StatusBadRequest, err
 	}
 
-	return id, nil // check and think whether id is returned or http status request
+	return http.StatusCreated, nil // check and think whether id is returned or http status request
 	//return 0, nil
 }
 

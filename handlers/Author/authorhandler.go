@@ -19,6 +19,7 @@ func New(author services.Author) AuthorHandler {
 	return AuthorHandler{serviceAuthor: author}
 }
 
+// post author
 func (a AuthorHandler) PostAuthor(rw http.ResponseWriter, req *http.Request) {
 	var author entities.Author
 	body, _ := io.ReadAll(req.Body)
@@ -38,10 +39,13 @@ func (a AuthorHandler) PostAuthor(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	body, _ = json.Marshal(resp)
+
+	rw.WriteHeader(http.StatusCreated)
 	_, _ = rw.Write(body)
 
 }
 
+// put author by id
 func (a AuthorHandler) PutAuthor(rw http.ResponseWriter, req *http.Request) {
 	var author entities.Author
 	body, _ := io.ReadAll(req.Body)
@@ -63,6 +67,7 @@ func (a AuthorHandler) PutAuthor(rw http.ResponseWriter, req *http.Request) {
 
 }
 
+// delete author by id
 func (a AuthorHandler) DeleteAuthor(rw http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 
@@ -80,6 +85,6 @@ func (a AuthorHandler) DeleteAuthor(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	body, _ := json.Marshal(resp)
-	_, _ = rw.Write(body)
+
+	rw.WriteHeader(http.StatusNoContent)
 }

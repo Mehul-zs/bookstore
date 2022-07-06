@@ -16,7 +16,7 @@ func New(db *sql.DB) Bookstore {
 	return Bookstore{db: db}
 }
 
-func (b Bookstore) GetAll() ([]entities.Books, error) {
+func (b Bookstore) GetAll(title string, getauthor string) ([]entities.Books, error) {
 
 	var rows *sql.Rows
 	//if title == "" {

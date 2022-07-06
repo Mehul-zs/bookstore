@@ -2,6 +2,7 @@ package handlerbook
 
 import (
 	"Bookstore/entities"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/mux"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -120,85 +122,88 @@ func TestBookhandler_GetByID(t *testing.T) {
 	}
 }
 
-//func TestBookhandler_PostBook(t *testing.T) {
-//
-//	testcases := []struct {
-//		input  entities.Books
-//		expOut entities.Books
-//	}{
-//		{entities.Books{
-//			Id:    1,
-//			Title: "Mehul",
-//			Author: entities.Author{
-//				Id:        0,
-//				FirstName: "Charles",
-//				LastName:  "Lee",
-//				Dob:       "12/01/1942",
-//				PenName:   "CL",
-//			},
-//			Publication:   "Penguin",
-//			PublishedDate: "12/02/1970",
-//		}, entities.Books{
-//			Id:    1,
-//			Title: "Mehul",
-//			Author: entities.Author{
-//				Id:        0,
-//				FirstName: "Charles",
-//				LastName:  "Lee",
-//				Dob:       "12/01/1942",
-//				PenName:   "CL",
-//			},
-//			Publication:   "Penguin",
-//			PublishedDate: "12/02/1970",
-//		},
-//		},
-//	}
-//	for i, v := range testcases {
-//		req := httptest.NewRequest("POST", "/book", nil)
-//		w := httptest.NewRecorder()
-//
-//		//a := New(mockDatastore{})
-//
-//		a.PostBook(w, req)
-//
-//		if !reflect.DeepEqual(w.Body, v.expOut) {
-//			t.Errorf("[TEST%d]Failed. Got %v\tExpected %v\n", i+1, w.Body.String(), v.expOut)
-//		}
-//	}
-//
-//}
+func TestBookhandler_PostBook(t *testing.T) {
 
-//func TestBookhandler_DeleteBook(t *testing.T) {
-//	testcases := []struct {
-//		ID        string
-//		expStatus int
-//	}{
-//		{"50", http.StatusBadRequest},
-//		{"-1", http.StatusBadRequest},
-//		{"1", http.StatusNoContent},
-//		{"2", http.StatusNoContent},
-//	}
-//	for _, v := range testcases {
-//		req := httptest.NewRequest("DELETE", "/deleteBook/{id}"+v.ID, nil)
-//		req = mux.SetURLVars(req, map[string]string{"id": v.ID})
-//
-//		rw := httptest.NewRecorder()
-//		a := New(mock{})
-//		a.DeleteBook(rw, req)
-//
-//		if !reflect.DeepEqual(rw.Result().StatusCode, v.expStatus) {
-//			t.Errorf("Test case failed")
-//		}
-//
-//	}
-//
-//}
+	testcases := []struct {
+		input     entities.Books
+		expStatus int
+	}{
+		{entities.Books{
+			Id:    1,
+			Title: "Mehul",
+			Author: entities.Author{
+				Id:        1,
+				FirstName: "Charles",
+				LastName:  "Lee",
+				Dob:       "12/01/1942",
+				PenName:   "CL",
+			},
+			Publication:   "Penguin",
+			PublishedDate: "12/02/1970",
+			AuthorID:      1,
+		}, http.StatusCreated,
+		},
+	}
+	for i, v := range testcases {
+		body, err := json.Marshal(v.input)
+		if err != nil {
+			t.Errorf("Error converting in data format %v", v.input)
+		}
+		req := httptest.NewRequest("POST", "/book", bytes.NewReader(body))
+		rw := httptest.NewRecorder()
+
+		a := New(mock{})
+
+		a.PostBook(rw, req)
+
+		if !reflect.DeepEqual(rw.Result().StatusCode, v.expStatus) {
+			t.Errorf("[TEST%d]Failed. Got %v\tExpected %v\n", i+1, rw.Result().StatusCode, v.expStatus)
+		}
+	}
+
+}
+
+func TestBookhandler_PutBook(t *testing.T) {
+	testcases := []struct {
+		desc          string
+		input         entities.Books
+		expout        entities.Books
+		expstatuscode int64
+		err           error
+	}{
+		{},
+	}
+
+}
+
+func TestBookhandler_DeleteBook(t *testing.T) {
+	testcases := []struct {
+		ID        string
+		expStatus int
+	}{
+		{"50", http.StatusBadRequest},
+		{"-1", http.StatusBadRequest},
+		{"1", http.StatusNoContent},
+		{"2", http.StatusNoContent},
+	}
+	for _, v := range testcases {
+		req := httptest.NewRequest("DELETE", "/deleteBook/{id}"+v.ID, nil)
+		req = mux.SetURLVars(req, map[string]string{"id": v.ID})
+
+		rw := httptest.NewRecorder()
+		a := New(mock{})
+		a.DeleteBook(rw, req)
+
+		if !reflect.DeepEqual(rw.Result().StatusCode, v.expStatus) {
+			t.Errorf("Test case failed")
+		}
+
+	}
+
+}
 
 type mock struct{}
 
-//func (m mock) GetAll(s string, a string) ([]entities.Books, error) {
-//	return nil, nil
-//}
 func (m mock) GetAll(title string, getAuthor string) ([]entities.Books, error) {
 	return []entities.Books{
 		{
@@ -238,7 +243,15 @@ func (m mock) GetByID(id int) (entities.Books, error) {
 }
 
 func (m mock) PostBook(books entities.Books) (int64, error) {
-	return 0, nil
+	if !chkbook(&books) {
+		return 0, errors.New("Invalid book")
+	}
+
+	if !chkauthor(books.Author) {
+		return 0, errors.New("Invalid Author")
+	}
+	return 1, nil
+
 }
 
 func (m mock) PutBook(books entities.Books, id int) (entities.Books, error) {
@@ -250,4 +263,30 @@ func (m mock) DeleteBook(id int) (int64, error) {
 		return 0, errors.New("invalid id")
 	}
 	return 1, nil
+}
+
+func chkbook(b *entities.Books) bool {
+	date := strings.Split(b.PublishedDate, "-")
+	sz := 3
+
+	switch {
+	case b.Publication != "Penguin" && b.Publication != "Scholastic" && b.Publication != "Arihanth":
+		return false
+	case len(date) < sz:
+		return false
+	case date[2] >= "2022" || date[2] < "1880":
+		return false
+	case b.Title == "":
+		return false
+	default:
+		return true
+	}
+}
+
+func chkauthor(author entities.Author) bool {
+	if author.FirstName == "" || author.LastName == "" || author.Dob == "" || author.PenName == "" || author.Id <= 0 {
+		return false
+	}
+
+	return true
 }

@@ -5,7 +5,7 @@ import (
 )
 
 type BookStore interface {
-	GetAll() ([]entities.Books, error)
+	GetAll(string, string) ([]entities.Books, error)
 	GetByID(int) (entities.Books, error)
 	PostBook(books entities.Books) (int64, error)
 	PutBook(books entities.Books, id int) (entities.Books, error)

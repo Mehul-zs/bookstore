@@ -17,7 +17,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func DbConn() (*sql.DB, error) {
+//connection to the database
+func DBConn() (*sql.DB, error) {
 	db, err := sql.Open("mysql", "root"+":"+"HelloMehul1@"+"@tcp(localhost:3306)"+"/"+"bookstore")
 	if err != nil {
 		return nil, err
@@ -28,31 +29,31 @@ func DbConn() (*sql.DB, error) {
 		fmt.Println("Error, connection not established")
 		return nil, nil
 	}
-	fmt.Println("Connection establsied")
+	//fmt.Println("Connection establsied")
 
 	return db, nil
 }
 
 func main() {
 
-	db, err := DbConn()
+	db, err := DBConn()
 	if err != nil {
 		return
 	}
 
+	//mapping three layer architecture
 	bookstore := datastoreBook.New(db)
 	servicebook := serviceBook.New(bookstore)
 	handlerbook := handlerBook.New(servicebook)
 
-	////fmt.Println("Hey Mehul!")
-
 	authorstore := datastoreAuthor.New(db)
 	serviceauth := serviceAuthor.New(authorstore)
 	handlerauthor := handlerAuthor.New(serviceauth)
-	fmt.Println("Hello main")
+	//fmt.Println("Hello main")
 
+	//initialising the route
 	r := mux.NewRouter()
-	fmt.Println(db)
+	//fmt.Println(db)
 
 	r.HandleFunc("/books", handlerbook.GetAll).Methods(http.MethodGet)
 	r.HandleFunc("/books/{id}", handlerbook.GetByID).Methods(http.MethodGet)
@@ -71,7 +72,7 @@ func main() {
 		Addr:    ":5000",
 		Handler: r,
 	}
-
+	//starting the server at port 500
 	fmt.Println("Server started at 5000")
 	log.Fatal(Server.ListenAndServe())
 }

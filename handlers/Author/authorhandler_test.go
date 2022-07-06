@@ -9,28 +9,6 @@ import (
 	"testing"
 )
 
-func TestAuthorHandler_Handler(t *testing.T) {
-	testcases := []struct {
-		method             string
-		expectedStatusCode int
-	}{
-		{"POST", http.StatusOK},
-		{"DELETE", http.StatusMethodNotAllowed},
-	}
-
-	for _, v := range testcases {
-		req := httptest.NewRequest(v.method, "/author", nil)
-		w := httptest.NewRecorder()
-
-		a := New(mockDatastore{})
-		a.Handler(w, req)
-
-		if w.Code != v.expectedStatusCode {
-			t.Errorf("Expected %v\tGot %v", v.expectedStatusCode, w.Code)
-		}
-	}
-}
-
 func TestPostAuthor(t *testing.T) {
 	testcases := []struct {
 		reqBody  []byte
@@ -52,17 +30,18 @@ func TestPostAuthor(t *testing.T) {
 	}
 }
 
-func DeleteAuthor(t *testing.T) {
+func TestDeleteAuthor(t *testing.T) {
 	testcases := []struct {
+		desc      string
 		ID        string
 		expStatus int
 	}{
-		{"50", http.StatusBadRequest},
-		{"-1", http.StatusBadRequest},
-		{"1", http.StatusNoContent},
+		{"Valid", "50", http.StatusBadRequest},
+		{"Invalid input", "-1", http.StatusBadRequest},
+		{"Valid inout", "1", http.StatusNoContent},
 	}
 	for i, v := range testcases {
-		req := httptest.NewRequest("DELETE", v.ID, nil)
+		req := httptest.NewRequest("DELETE", "/author/{id}"+v.ID, nil)
 		w := httptest.NewRecorder()
 
 		a := New(mockDatastore{})
@@ -78,14 +57,14 @@ func DeleteAuthor(t *testing.T) {
 
 type mockDatastore struct{}
 
-func (m mockDatastore) PostAuthor(a entities.Author) (entities.Author, error) {
+func (m mockDatastore) PostAuthor(a entities.Author) (int64, error) {
 
-	return entities.Author{}, nil
+	return 0, nil
 
 }
 
-func (m mockDatastore) PutAuthor(a entities.Author) (int64, error) {
-	return 0, nil
+func (m mockDatastore) PutAuthor(a entities.Author) (entities.Author, error) {
+	return entities.Author{}, nil
 }
 
 func (m mockDatastore) DeleteAuthor(id int) (int64, error) {

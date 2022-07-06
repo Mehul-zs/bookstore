@@ -10,7 +10,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func DBConn() *sql.DB {
+func DbConn() *sql.DB {
 	db, err := sql.Open("mysql", "root"+":"+"HelloMehul1@"+"@tcp(localhost:3306)"+"/"+"bookstore")
 	if err != nil {
 		log.Fatal("failed to connect with database:\n", err)
@@ -35,7 +35,7 @@ func TestPostAuthor(t *testing.T) {
 		{"Author Already exists", entities.Author{1, "Rakshit", "Gupta", "12/02/1996", "kinu"}, entities.Author{}, errors.New("Author already exists")},
 	}
 
-	DB := DBConn()
+	DB := DbConn()
 	authorStore := New(DB)
 
 	for i, tc := range testcases {
@@ -61,7 +61,7 @@ func TestDeleteAuthor(t *testing.T) {
 
 	for _, tc := range testcases {
 
-		DB := DBConn()
+		DB := DbConn()
 		authorStore := New(DB)
 
 		res, err := authorStore.DeleteAuthor(tc.input)
@@ -84,7 +84,7 @@ func TestPutAuthor(t *testing.T) {
 		{"ID does not exist", entities.Author{Id: 9, FirstName: "Rakshit", LastName: "Gupta", Dob: "06/07/2000", PenName: "rk"},
 			entities.Author{}, nil},
 	}
-	db := DBConn()
+	db := DbConn()
 	a := New(db)
 	for i, tc := range testcases {
 		res, err := a.PostAuthor(tc.input)
