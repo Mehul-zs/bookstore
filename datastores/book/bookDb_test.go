@@ -7,7 +7,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"net/http"
-	"reflect"
 	"testing"
 )
 
@@ -25,43 +24,43 @@ func DBConn() *sql.DB {
 	return db
 }
 
-func TestBookstore_GetAll(t *testing.T) {
-	testcases := []struct {
-		desc   string
-		output []entities.Books
-	}{
-		{"Validated", []entities.Books{{
-			Id:    1,
-			Title: "James",
-			Author: entities.Author{
-				Id:        1,
-				FirstName: "Mehul",
-				LastName:  "Gupta",
-				Dob:       "12/02/1970",
-				PenName:   "Me",
-			},
-			Publication:   "Penguin",
-			PublishedDate: "12/07/1999",
-			AuthorID:      1,
-		}},
-		},
-	}
-
-	for _, tc := range testcases {
-		DB := DBConn()
-		bookStore := New(DB)
-
-		chk, err := bookStore.GetAll()
-
-		if err != nil {
-			t.Errorf("Test case failed %v", tc.desc)
-		}
-
-		if !reflect.DeepEqual(chk, tc.output) {
-			t.Errorf("Test case failed: %s", tc.output)
-		}
-	}
-}
+//func TestBookstore_GetAll(t *testing.T) {
+//	testcases := []struct {
+//		desc   string
+//		output []entities.Books
+//	}{
+//		{"Validated", []entities.Books{{
+//			Id:    1,
+//			Title: "James",
+//			Author: entities.Author{
+//				Id:        1,
+//				FirstName: "Mehul",
+//				LastName:  "Gupta",
+//				Dob:       "12/02/1970",
+//				PenName:   "Me",
+//			},
+//			Publication:   "Penguin",
+//			PublishedDate: "12/07/1999",
+//			AuthorID:      1,
+//		}},
+//		},
+//	}
+//
+//	for _, tc := range testcases {
+//		DB := DBConn()
+//		bookStore := New(DB)
+//
+//		chk, err := bookStore.GetAll()
+//
+//		if err != nil {
+//			t.Errorf("Test case failed %v", tc.desc)
+//		}
+//
+//		if !reflect.DeepEqual(chk, tc.output) {
+//			t.Errorf("Test case failed: %s", tc.output)
+//		}
+//	}
+//}
 
 func TestBookstore_GetByID(t *testing.T) {
 	testcases := []struct {
@@ -88,29 +87,29 @@ func TestBookstore_GetByID(t *testing.T) {
 
 }
 
-//func TestBookstore_PostBook(t *testing.T) {
-//	testcases := []struct {
-//		desc string
-//		req  entities.Books
-//		err  error
-//	}{
-//		{"Valid book", entities.Books{1, "james ", entities.Author{FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "Me"}, "Penguin", "12/01/2020"}, errors.New("Sucess, status Ok!")},
-//		{"Invalid published date", entities.Books{1, "Rakshit", entities.Author{FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "Me"}, "Penguin", "12/02/2222"}, errors.New("Author already exists")},
-//	}
-//	for _, tc := range testcases {
-//
-//		DB := DbConn()
-//		bookStore := New(DB)
-//
-//		id, err := bookStore.PostBook(tc.req)
-//
-//		if id == http.StatusBadRequest {
-//			t.Errorf("Bad request , test case failed")
-//
-//		}
-//	}
-//
-//}
+func TestBookstore_PostBook(t *testing.T) {
+	testcases := []struct {
+		desc      string
+		req       entities.Books
+		expStatus int64
+		//err       error
+	}{
+		{"Valid book", entities.Books{10, "james", entities.Author{Id: 2, FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "Me"}, "Penguin", "12/01/2020", 2}, http.StatusCreated},
+		{"Invalid published date", entities.Books{1, "Rakshit", entities.Author{Id: 3, FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "e"}, "Penguin", "12/02/2222", 3}, http.StatusBadRequest},
+	}
+
+	DB := DBConn()
+	bookStore := New(DB)
+
+	for i, tc := range testcases {
+
+		res, _ := bookStore.PostBook(tc.req)
+		if res != tc.expStatus {
+			t.Errorf("testcase:%d desc:%v actualoutput:%v expectedoutput:%v", i, tc.desc, res, tc.expStatus)
+		}
+	}
+
+}
 
 func TestBookstore_DeleteBook(t *testing.T) {
 

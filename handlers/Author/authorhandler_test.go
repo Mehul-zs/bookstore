@@ -3,6 +3,7 @@ package handlerauthor
 import (
 	"Bookstore/entities"
 	"bytes"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -30,26 +31,31 @@ func TestPostAuthor(t *testing.T) {
 	}
 }
 
+func TestPutAuthor(t *testing.T) {
+
+}
+
 func TestDeleteAuthor(t *testing.T) {
 	testcases := []struct {
 		desc      string
 		ID        string
 		expStatus int
+		err       error
 	}{
-		{"Valid", "50", http.StatusBadRequest},
-		{"Invalid input", "-1", http.StatusBadRequest},
-		{"Valid inout", "1", http.StatusNoContent},
+		//{"Valid", "50", http.StatusBadRequest, },
+		{"Invalid input", "-1", http.StatusBadRequest, errors.New("invalid id")},
+		{"Valid inout", "1", http.StatusNoContent, nil},
 	}
-	for i, v := range testcases {
-		req := httptest.NewRequest("DELETE", "/author/{id}"+v.ID, nil)
-		w := httptest.NewRecorder()
+	for i, tc := range testcases {
+		req := httptest.NewRequest("DELETE", "/author/{id}"+tc.ID, nil)
+		rw := httptest.NewRecorder()
 
 		a := New(mockDatastore{})
 
-		a.DeleteAuthor(w, req)
+		a.DeleteAuthor(rw, req)
 
-		if !reflect.DeepEqual(w.Result().StatusCode, v.expStatus) {
-			t.Errorf("Test case failed")
+		if !reflect.DeepEqual(rw.Result().StatusCode, tc.expStatus) {
+			t.Errorf("testcase:%d desc:%v actualResult:%v expectedResponse:%v expectedError:%v", i, tc.desc, rw.Result().StatusCode, tc.expStatus, tc.err)
 		}
 
 	}
@@ -63,7 +69,7 @@ func (m mockDatastore) PostAuthor(a entities.Author) (int64, error) {
 
 }
 
-func (m mockDatastore) PutAuthor(a entities.Author) (entities.Author, error) {
+func (m mockDatastore) PutAuthor(a entities.Author, id int) (entities.Author, error) {
 	return entities.Author{}, nil
 }
 

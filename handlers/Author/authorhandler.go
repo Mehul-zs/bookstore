@@ -56,10 +56,18 @@ func (a AuthorHandler) PutAuthor(rw http.ResponseWriter, req *http.Request) {
 		_, _ = rw.Write([]byte("Invalid Author"))
 		return
 	}
-	resp, err := a.serviceAuthor.PutAuthor(author)
+
+	params := mux.Vars(req)
+	id, err := strconv.Atoi(params["id"])
 	if err != nil {
-		_, _ = rw.Write([]byte("Error in put method"))
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	resp, err := a.serviceAuthor.PutAuthor(author, id)
+	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
+		_, _ = rw.Write([]byte("Error in put method"))
 		return
 	}
 	body, _ = json.Marshal(resp)

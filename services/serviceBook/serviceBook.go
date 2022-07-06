@@ -3,8 +3,7 @@ package serviceBook
 import (
 	datastore "Bookstore/datastores"
 	"Bookstore/entities"
-	"fmt"
-	"log"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -22,10 +21,10 @@ func New(b datastore.BookStore) serviceBook {
 func (bs serviceBook) GetAll(title string, getAuthor string) ([]entities.Books, error) {
 
 	var books []entities.Books
-	fmt.Println("hello Mehul")
+	//fmt.Println("hello Mehul")
 	books, err := bs.bookstore.GetAll(title, getAuthor)
 	if err != nil {
-		fmt.Println("hello get all service layer")
+		//fmt.Println("hello get all service layer")
 		return nil, nil
 	}
 
@@ -34,7 +33,7 @@ func (bs serviceBook) GetAll(title string, getAuthor string) ([]entities.Books, 
 
 func (bs serviceBook) GetByID(id int) (entities.Books, error) {
 	if id <= 0 {
-		return entities.Books{}, nil
+		return entities.Books{}, errors.New("Negative book id")
 	}
 	var book entities.Books
 	book, err := bs.bookstore.GetByID(id)
@@ -50,18 +49,18 @@ func (bs serviceBook) PostBook(books entities.Books) (int64, error) {
 	}
 
 	if books.Publication != "Scholastic" && books.Publication != "Arihant" && books.Publication != "Penguin" {
-		log.Print("Invalid Publication")
+		//log.Print("Invalid Publication")
 		return http.StatusBadRequest, nil
 	}
 
 	publishedDate := strings.Split(books.PublishedDate, "/")
 	if len(publishedDate) < 3 {
-		return http.StatusBadRequest, nil
+		return http.StatusBadRequest, errors.New("Invalid  published date")
 	}
 	yr, _ := strconv.Atoi(publishedDate[2])
 
 	if yr >= 2022 || yr < 1880 {
-		return http.StatusBadRequest, nil
+		return http.StatusBadRequest, errors.New("invalid published year")
 
 	}
 
@@ -75,32 +74,32 @@ func (bs serviceBook) PostBook(books entities.Books) (int64, error) {
 }
 
 func (bs serviceBook) PutBook(book entities.Books, id int) (entities.Books, error) {
-	fmt.Println("Hello Put book")
+	//fmt.Println("Hello Put book")
 	if book.Title == "" {
-		fmt.Println("Hello put title is empty")
+		//fmt.Println("Hello put title is empty")
 		return entities.Books{}, nil
 	}
 	if book.Publication != "Scholastic" && book.Publication != "Arihant" && book.Publication != "Penguin" {
-		log.Print("Invalid Publication")
+		//log.Print("Invalid Publication")
 		return entities.Books{}, nil
 	}
 
 	publicationDate := strings.Split(book.PublishedDate, "/")
 	if len(publicationDate) < 3 {
-		fmt.Println("Hello publication date")
+		//fmt.Println("Hello publication date")
 		return entities.Books{}, nil
 	}
 	yr, _ := strconv.Atoi(publicationDate[2])
 	if yr > time.Now().Year() || yr < 1880 {
 		return entities.Books{}, nil
 	}
-	fmt.Println("Hello entering daatastore put book")
+	//fmt.Println("Hello entering daatastore put book")
 	books, err := bs.bookstore.PutBook(book, id)
 	if err != nil {
-		fmt.Println("Hello books")
+		//fmt.Println("Hello books")
 		return entities.Books{}, nil
 	}
-	fmt.Println("Hello Mehul")
+	//fmt.Println("Hello Mehul")
 	return books, nil
 
 }
@@ -108,13 +107,13 @@ func (bs serviceBook) PutBook(book entities.Books, id int) (entities.Books, erro
 func (bs serviceBook) DeleteBook(id int) (int64, error) {
 
 	if id <= 0 {
-		return http.StatusBadRequest, nil
+		return http.StatusBadRequest, errors.New("Negative ID params")
 	}
 
-	cnt, err := bs.bookstore.DeleteBook(id)
+	_, err := bs.bookstore.DeleteBook(id)
 	if err != nil {
-		return http.StatusBadRequest, nil
+		return http.StatusBadRequest, errors.New("not valid id")
 	}
 
-	return cnt, nil
+	return http.StatusNoContent, nil
 }

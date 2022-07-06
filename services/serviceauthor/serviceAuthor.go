@@ -1,4 +1,4 @@
-package serviceAuthor
+package serviceauthor
 
 import (
 	datastore "Bookstore/datastores"
@@ -15,33 +15,31 @@ func New(a datastore.AuthorStore) ServiceAuthor {
 	return ServiceAuthor{a}
 }
 
-//func checkDob(Dob string) bool {
-//
-//	return false
-//}
-
 func (s ServiceAuthor) PostAuthor(a entities.Author) (int64, error) {
 
-	if a.FirstName == "" {
-		return 0, errors.New("not valid constraints")
+	if a.FirstName == "" || a.LastName == "" || a.Id <= 0 || a.Dob == "" || a.PenName == "" {
+		return http.StatusBadRequest, errors.New("either of the field is empty")
 	}
 
 	_, err := s.authorstore.PostAuthor(a)
 	if err != nil {
-		return http.StatusBadRequest, err
+		return http.StatusBadRequest, errors.New("")
 	}
 
 	return http.StatusCreated, nil // check and think whether id is returned or http status request
 	//return 0, nil
 }
 
-func (s ServiceAuthor) PutAuthor(a entities.Author) (entities.Author, error) {
+func (s ServiceAuthor) PutAuthor(a entities.Author, id int) (entities.Author, error) {
 
-	if a.FirstName == "" {
+	if a.FirstName == "" || a.LastName == "" || a.Id <= 0 || a.Dob == "" || a.PenName == "" {
 		return entities.Author{}, errors.New("not valid constraints")
 	}
+	if id <= 0 {
+		return entities.Author{}, errors.New("negative ID params")
+	}
 
-	author, err := s.authorstore.PutAuthor(a)
+	author, err := s.authorstore.PutAuthor(a, id)
 	if err != nil {
 		return entities.Author{}, err
 	}
@@ -52,14 +50,14 @@ func (s ServiceAuthor) PutAuthor(a entities.Author) (entities.Author, error) {
 
 func (s ServiceAuthor) DeleteAuthor(id int) (int64, error) {
 	if id < 0 {
-		return 0, errors.New("not valid id")
+		return http.StatusBadRequest, errors.New("negative id not accpeted")
 	}
 
-	cnt, err := s.authorstore.DeleteAuthor(id)
+	_, err := s.authorstore.DeleteAuthor(id)
 	if err != nil {
-		return 0, err
+		return http.StatusBadRequest, errors.New("not valid id")
 	}
 
-	return cnt, nil
+	return http.StatusNoContent, nil
 	//return 0, nil
 }

@@ -80,18 +80,19 @@ func (b Bookstore) PostBook(books entities.Books) (int64, error) {
 	}
 
 	var authId int64
-	if result.Next() {
+	if !result.Next() {
 		err = result.Scan(&authId)
 		if err != nil {
 			log.Print("author is not present")
+			return http.StatusBadRequest, nil
 		}
 	} else {
-		res, err := b.db.Exec("INSERT INTO Author (Id, FirstName,LastName,Dob,PenName) VALUES (?, ?, ?, ?, ?)",
+		_, err := b.db.Exec("INSERT INTO Author (Id, FirstName,LastName,Dob,PenName) VALUES (?, ?, ?, ?, ?)",
 			books.Author.Id, books.Author.FirstName, books.Author.LastName, books.Author.Dob, books.Author.PenName)
 		if err != nil {
 			return http.StatusBadRequest, nil
 		}
-		_, err = res.LastInsertId()
+		//_, err = res.LastInsertId()
 		if err != nil {
 			return http.StatusBadRequest, nil
 		}

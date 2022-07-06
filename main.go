@@ -5,8 +5,8 @@ import (
 	datastoreBook "Bookstore/datastores/book"
 	handlerAuthor "Bookstore/handlers/Author"
 	handlerBook "Bookstore/handlers/books"
-	"Bookstore/services/serviceAuthor"
 	"Bookstore/services/serviceBook"
+	"Bookstore/services/serviceauthor"
 	"database/sql"
 	"fmt"
 	"log"
@@ -47,7 +47,7 @@ func main() {
 	handlerbook := handlerBook.New(servicebook)
 
 	authorstore := datastoreAuthor.New(db)
-	serviceauth := serviceAuthor.New(authorstore)
+	serviceauth := serviceauthor.New(authorstore)
 	handlerauthor := handlerAuthor.New(serviceauth)
 	//fmt.Println("Hello main")
 
@@ -55,7 +55,7 @@ func main() {
 	r := mux.NewRouter()
 	//fmt.Println(db)
 
-	r.HandleFunc("/books", handlerbook.GetAll).Methods(http.MethodGet)
+	//r.HandleFunc("/books", handlerbook.GetAll).Methods(http.MethodGet)
 	r.HandleFunc("/books/{id}", handlerbook.GetByID).Methods(http.MethodGet)
 
 	r.HandleFunc("/author", handlerauthor.PostAuthor).Methods(http.MethodPost)

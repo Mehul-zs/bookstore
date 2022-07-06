@@ -13,7 +13,7 @@ type BookStore interface {
 }
 
 type AuthorStore interface {
-	PostAuthor(author entities.Author) (entities.Author, error)
-	PutAuthor(author entities.Author) (entities.Author, error)
+	PostAuthor(author entities.Author) (int64, error)
+	PutAuthor(author entities.Author, id int) (entities.Author, error)
 	DeleteAuthor(int) (int64, error)
 }

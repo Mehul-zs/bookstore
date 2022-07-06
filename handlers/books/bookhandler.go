@@ -4,6 +4,7 @@ import (
 	"Bookstore/entities"
 	"Bookstore/services"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"io"
 	"log"
@@ -20,20 +21,20 @@ func New(s services.Book) Bookhandler {
 }
 
 //get all books
-func (b Bookhandler) GetAll(rw http.ResponseWriter, req *http.Request) {
-	title := req.URL.Query().Get("Title")
-	getauthor := req.URL.Query().Get("getauthor")
-
-	resp, err := b.serviceBook.GetAll(title, getauthor)
-	if err != nil {
-		_, _ = rw.Write([]byte("Could not post book"))
-		rw.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	body, _ := json.Marshal(resp)
-	_, _ = rw.Write(body)
-
-}
+//func (b Bookhandler) GetAll(rw http.ResponseWriter, req *http.Request) {
+//	title := req.URL.Query().Get("Title")
+//	getauthor := req.URL.Query().Get("getauthor")
+//
+//	resp, err := b.serviceBook.GetAll(title, getauthor)
+//	if err != nil {
+//		_, _ = rw.Write([]byte("Could not post book"))
+//		rw.WriteHeader(http.StatusBadRequest)
+//		return
+//	}
+//	body, _ := json.Marshal(resp)
+//	_, _ = rw.Write(body)
+//
+//}
 
 //get book by id
 func (b Bookhandler) GetByID(rw http.ResponseWriter, req *http.Request) {
@@ -62,22 +63,24 @@ func (b Bookhandler) GetByID(rw http.ResponseWriter, req *http.Request) {
 // post a book
 func (b Bookhandler) PostBook(rw http.ResponseWriter, req *http.Request) {
 	var book entities.Books
-	body, _ := io.ReadAll(req.Body)
-	err := json.Unmarshal(body, &book)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		//fmt.Println("Post handler error")
 		rw.WriteHeader(http.StatusBadRequest)
 		_, _ = rw.Write([]byte("invalid Author"))
 		return
 	}
-
+	json.Unmarshal(body, &book)
 	_, err = b.serviceBook.PostBook(book)
 	if err != nil {
-		_, _ = rw.Write([]byte("Could not post book"))
+		fmt.Println(err)
+		//fmt.Println("Hiii")
+		//_, _ = rw.Write([]byte("Could not post book"))
 		rw.WriteHeader(http.StatusInternalServerError)
+		_, _ = rw.Write([]byte("Error in put method"))
+
 		return
 	}
-
 	rw.WriteHeader(http.StatusCreated)
 }
 
@@ -104,14 +107,13 @@ func (b Bookhandler) PutBook(rw http.ResponseWriter, req *http.Request) {
 
 	resp, err := b.serviceBook.PutBook(book, id)
 	if err != nil {
-		_, _ = rw.Write([]byte("Error in put method"))
 		rw.WriteHeader(http.StatusInternalServerError)
+		_, _ = rw.Write([]byte("Error in put method"))
 		return
 	}
 	body, _ = json.Marshal(resp)
 	rw.WriteHeader(http.StatusAccepted) //202 request accpeted but processing i not completed
 	_, _ = rw.Write(body)
-
 }
 
 // delete a book by id
@@ -124,7 +126,6 @@ func (b Bookhandler) DeleteBook(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
 	_, err = b.serviceBook.DeleteBook(id)
 	if err != nil {
 		//_, _ = rw.Write([]byte("could not retrieve book"))
@@ -132,5 +133,5 @@ func (b Bookhandler) DeleteBook(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	rw.WriteHeader(http.StatusNoContent)
-
+	return
 }
