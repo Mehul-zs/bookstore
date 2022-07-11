@@ -42,7 +42,7 @@ func (s Authorstore) GetAllAuthor(ctx context.Context) ([]entities.Author, error
 
 func (a Authorstore) CheckAuthor(ctx context.Context, author entities.Author) (int, error) {
 
-	_, err := a.db.QueryContext(ctx, "SELECT Id FROM Author WHERE FirstName=? AND LastName=? AND  Dob=? AND PenName=? AND Id =?", author.FirstName, author.LastName, author.Dob, author.PenName, id)
+	_, err := a.db.QueryContext(ctx, "SELECT Id FROM Author WHERE FirstName=? AND LastName=? AND  Dob=? AND PenName=? AND Id =?", author.FirstName, author.LastName, author.Dob, author.PenName, author.Id)
 	if err != nil {
 		return 0, errors.New("Author Alreadyexists")
 

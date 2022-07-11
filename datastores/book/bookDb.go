@@ -17,12 +17,12 @@ func New(db *sql.DB) Bookstore {
 	return Bookstore{db: db}
 }
 
-func (b Bookstore) GetAllBooks(title string, getauthor string) ([]entities.Book, error) {
+func (b Bookstore) GetAllBooks(ctx context.Context, title string, getauthor string) ([]entities.Book, error) {
 	return []entities.Book{}, nil
 }
 
 // correct return error things..
-func (b Bookstore) GetBookByID(ID int) (entities.Book, error) {
+func (b Bookstore) GetBookByID(ctx context.Context, ID int) (entities.Book, error) {
 	bookrow := b.db.QueryRow("select * from Books where Id=?", ID)
 	book := entities.Book{}
 	err := bookrow.Scan(&book.Id, &book.Title, &book.Publication, &book.PublishedDate, &book.Author.Id)
