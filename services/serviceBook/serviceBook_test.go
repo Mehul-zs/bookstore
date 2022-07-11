@@ -1,11 +1,8 @@
 package serviceBook
 
 import (
-	datastore "Bookstore/datastores"
 	"Bookstore/entities"
-	"context"
 	"errors"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -105,15 +102,15 @@ func TestServiceBook_DeleteBook(t *testing.T) {
 		{"Valid BookId", 4, http.StatusBadRequest, errors.New("invalid book details")},
 	}
 
-	mockCntrl := gomock.NewController(t)
-	mockBookStore := datastore.NewMockBookStore(mockCntrl)
+	//mockCntrl := gomock.NewController(t)
+	//mockBookStore := datastore.NewMockBookStore(mockCntrl)
 	//mockAuthorstore := datastore.NewMockAuthorStore(mockCntrl)
 	//mockAuthorStore := authors.NewMockAuthor(mockCntrl)
-	mock := New(mockBookStore)
+	//mock := New(mockBookStore)
 	for _, tc := range testcases {
-		mockBookStore.EXPECT().DeleteBook(context.TODO(), tc.input).Return(tc.expOut, tc.err).AnyTimes()
-		res, _ := mock.DeleteBook(context.TODO()tc.input)
-		bookID, _ := mock.DeleteBook(context.TODO(), tc.input)
+		//mockBookStore.EXPECT().DeleteBook(context.TODO(), tc.input).Return(tc.expOut, tc.err).AnyTimes()
+		//res, _ := mock.DeleteBook(context.TODO()tc.input)
+		//bookID, _ := mock.DeleteBook(context.TODO(), tc.input)
 		assert.Equal(t, tc.id, bookID)
 	}
 

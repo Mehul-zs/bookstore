@@ -6,71 +6,57 @@ import (
 	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
 	_ "github.com/go-sql-driver/mysql"
+	"reflect"
 	"testing"
 )
 
-//func DBConn() *sql.DB {
-//	db, err := sql.Open("mysql", "root"+":"+"HelloMehul1@"+"@tcp(localhost:3306)"+"/"+"bookstore")
-//	if err != nil {
-//		log.Fatal("failed to connect with database:\n", err)
-//	}
-//
-//	pingErr := db.Ping()
-//	if pingErr != nil {
-//		log.Fatal("failed to ping", pingErr)
-//	}
-//
-//	return db
-//}
+func TestBookstore_GetAllBooks(t *testing.T) {
+	testcases := []struct {
+		desc   string
+		output []entities.Book
+	}{
+		{"Validated", []entities.Book{{
+			Id:    1,
+			Title: "James",
+			Author: entities.Author{
+				Id:        1,
+				FirstName: "Mehul",
+				LastName:  "Gupta",
+				Dob:       "12/02/1970",
+				PenName:   "Me",
+			},
+			Publication:   "Penguin",
+			PublishedDate: "12/07/1999",
+			AuthorID:      1,
+		}},
+		},
+	}
 
-//func TestBookstore_GetAll(t *testing.T) {
-//	testcases := []struct {
-//		desc   string
-//		output []entities.Books
-//	}{
-//		{"Validated", []entities.Books{{
-//			Id:    1,
-//			Title: "James",
-//			Author: entities.Author{
-//				Id:        1,
-//				FirstName: "Mehul",
-//				LastName:  "Gupta",
-//				Dob:       "12/02/1970",
-//				PenName:   "Me",
-//			},
-//			Publication:   "Penguin",
-//			PublishedDate: "12/07/1999",
-//			AuthorID:      1,
-//		}},
-//		},
-//	}
-//
-//	for _, tc := range testcases {
-//		DB := DBConn()
-//		bookStore := New(DB)
-//
-//		chk, err := bookStore.GetAll()
-//
-//		if err != nil {
-//			t.Errorf("Test case failed %v", tc.desc)
-//		}
-//
-//		if !reflect.DeepEqual(chk, tc.output) {
-//			t.Errorf("Test case failed: %s", tc.output)
-//		}
-//	}
-//}
+	for _, tc := range testcases {
+		DB := DBConn()
+		bookStore := New(DB)
 
-// check this again for testcases, mocking is running , 14% coverage only till now
-func TestBookstore_GetByID(t *testing.T) {
+		chk, err := bookStore.GetAllBooks(_, _, _)
+
+		if err != nil {
+			t.Errorf("Test case failed %v", tc.desc)
+		}
+
+		if !reflect.DeepEqual(chk, tc.output) {
+			t.Errorf("Test case failed: %s", tc.output)
+		}
+	}
+}
+
+func TestBookstore_GetBookByID(t *testing.T) {
 	testcases := []struct {
 		desc   string
 		input  int
-		expOut entities.Books
+		expOut entities.Book
 		err    error
 	}{
-		{"success", 1, entities.Books{Id: 1, AuthorID: 1, Title: "Clash of Titans", Publication: "penguin", PublishedDate: "16/07/1990", Author: entities.Author{Id: 1, FirstName: "Mehul", LastName: "Kumar", Dob: "01/04/1971", PenName: "Jonhy"}}, nil},
-		{"Invalid book Id", -2, entities.Books{}, errors.New("invalid ID")},
+		{"success", 1, entities.Book{Id: 1, AuthorID: 1, Title: "Clash of Titans", Publication: "penguin", PublishedDate: "16/07/1990", Author: entities.Author{Id: 1, FirstName: "Mehul", LastName: "Kumar", Dob: "01/04/1971", PenName: "Jonhy"}}, nil},
+		{"Invalid book Id", -2, entities.Book{}, errors.New("invalid ID")},
 	}
 
 	DB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
@@ -89,7 +75,7 @@ func TestBookstore_GetByID(t *testing.T) {
 		mock.ExpectQuery("select * from Books where Id=?").WithArgs(tc.input).WillReturnRows(rows)
 		mock.ExpectQuery("select * from Author where Id=?").WithArgs(tc.expOut.AuthorID).WillReturnRows(authrows)
 
-		chk, err := b.GetByID(tc.input)
+		chk, err := b.GetBookByID(context.Background(), tc.input)
 
 		if chk != tc.expOut && err != tc.err {
 			t.Errorf("Test case failed; expout : %v, output: %v, err: %s, experr: %v", tc.expOut, chk, err, tc.err)
@@ -98,17 +84,16 @@ func TestBookstore_GetByID(t *testing.T) {
 
 }
 
-// post book  -- completed
 func TestBookstore_PostBook(t *testing.T) {
 	testcases := []struct {
 		desc           string
-		req            entities.Book
+		req            *entities.Book
 		lastInsertedId int64
 		rowsAffected   int64
 		err            error
 	}{
-		{"Valid book", entities.Book{10, "james", entities.Author{Id: 2, FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "Me"}, "Penguin", "12/01/2020", 2}, 0, 1, nil},
-		{"Invalid published date", entities.Book{10, "Rakshit", entities.Author{Id: 3, FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "e"}, "Penguin", "12/02/2222", 3}, 0, 0, nil},
+		{"Valid book", &entities.Book{10, "james", entities.Author{Id: 2, FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "Me"}, "Penguin", "12/01/2020", 2}, 0, 1, nil},
+		{"Invalid published date", &entities.Book{10, "Rakshit", entities.Author{Id: 3, FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "e"}, "Penguin", "12/02/2222", 3}, 0, 0, nil},
 	}
 
 	DB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
@@ -119,11 +104,6 @@ func TestBookstore_PostBook(t *testing.T) {
 	defer DB.Close()
 
 	for i, tc := range testcases {
-		//rows := sqlmock.NewRows([]string{"AuthorId"}).AddRow(tc.req.AuthorID)
-		//row2 := sqlmock.NewRows([]string{"Id", "Firstname", "Lasstname", "Dob", "PenName"}).AddRow(tc.req.Author.Id, tc.req.Author.FirstName, tc.req.Author.LastName, tc.req.Author.Dob, tc.req.Author.PenName)
-		//fmt.Println("Hello")
-		//mock.ExpectQuery("SELECT Id FROM Author WHERE FirstName = ? AND LastName =? AND  Dob = ? AND PenName =?").WithArgs(tc.req.Author.FirstName, tc.req.Author.LastName, tc.req.Author.Dob, tc.req.Author.PenName).WillReturnRows(rows)
-		//mock.ExpectExec("INSERT INTO Author (Id, FirstName,LastName,Dob,PenName) VALUES (?, ?, ?, ?, ?)").WithArgs(tc.req.Author.Id, tc.req.Author.FirstName, tc.req.Author.LastName, tc.req.Author.Dob, tc.req.Author.PenName).WillReturnResult(sqlmock.NewRows(row2))
 		mock.ExpectExec("INSERT INTO Books (Id, Title, Publication,PublishedDate, AuthorId) VALUES (? ,?, ?, ?, ?)").WithArgs(tc.req.Id, tc.req.Title, tc.req.Publication, tc.req.PublishedDate, tc.req.AuthorID).WillReturnResult(sqlmock.NewResult(tc.lastInsertedId, tc.rowsAffected)).WillReturnResult(sqlmock.NewResult(0, tc.rowsAffected)).WillReturnError(tc.err)
 
 		row, err := b.PostBook(context.Background(), tc.req)
@@ -133,19 +113,18 @@ func TestBookstore_PostBook(t *testing.T) {
 	}
 }
 
-//put book with 41.6% coverage  - completed
 func TestBookstore_PutBook(t *testing.T) {
 	testcases := []struct {
 		desc         string
 		id           int
-		input        entities.Book
-		output       entities.Book
+		input        *entities.Book
+		output       *entities.Book
 		lastInsertId int64
 		rowsafected  int64
 		err          error
 	}{
-		{"Valid book", 10, entities.Book{10, "james", entities.Author{Id: 2, FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "Me"},
-			"Penguin", "12/01/2020", 2}, entities.Book{10, "james", entities.Author{Id: 2, FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "Me"},
+		{"Valid book", 10, &entities.Book{10, "james", entities.Author{Id: 2, FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "Me"},
+			"Penguin", "12/01/2020", 2}, &entities.Book{10, "james", entities.Author{Id: 2, FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "Me"},
 			"Penguin", "12/01/2020", 2}, 0, 1, nil},
 	}
 	DB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
@@ -166,7 +145,6 @@ func TestBookstore_PutBook(t *testing.T) {
 
 }
 
-// delete book completed 60% coverage  - completed
 func TestBookstore_DeleteBook(t *testing.T) {
 
 	testcases := []struct {

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
+	_ "github.com/DATA-DOG/go-sqlmock"
 	"log"
 	"net/http"
 	"reflect"
@@ -14,22 +15,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-//
-//func DBConn() *sql.DB {
-//	db, err := sql.Open("mysql", "root"+":"+"HelloMehul1@"+"@tcp(localhost:3306)"+"/"+"bookstore")
-//	if err != nil {
-//		log.Fatal("failed to connect with database:\n", err)
-//	}
-//
-//	pingErr := db.Ping()
-//	if pingErr != nil {
-//		log.Fatal("failed to ping", pingErr)
-//	}
-//
-//	return db
-//}
-
-/// get all author -- completed
 func TestGetAllAuthor(t *testing.T) {
 	testcases := []struct {
 		desc    string
@@ -49,7 +34,6 @@ func TestGetAllAuthor(t *testing.T) {
 		},
 	}
 	for i, tc := range testcases {
-
 		DB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		if err != nil {
 			log.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -69,20 +53,19 @@ func TestGetAllAuthor(t *testing.T) {
 	}
 }
 
-// post author -- completed
 func TestPostAuthor(t *testing.T) {
-
 	testcases := []struct {
 		desc   string
 		req    entities.Author
 		expOut int64
 		err    error
 	}{
-		{"Valid Author", entities.Author{Id: 10, FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "Me"}, http.StatusCreated, nil},
-		{desc: "Author Already exists", req: entities.Author{1, "Hey", "kumar", "01/07/2000", "Me"}, expOut: http.StatusBadRequest, err: errors.New("Author Alreadyexists")},
+		{"Valid Author", entities.Author{Id: 10, FirstName: "Mehul", LastName: "Rawal", Dob: "18/07/2000", PenName: "Me"},
+			http.StatusCreated, nil},
+		{"Author Already exists", entities.Author{1, "Hey", "kumar", "01/07/2000", "Me"},
+			http.StatusBadRequest, errors.New("Author Alreadyexists")},
 	}
 
-	//DB := DBConn()
 	DB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	if err != nil {
 		t.Fatalf("error during the opening of database:%v\n", err)
@@ -90,22 +73,17 @@ func TestPostAuthor(t *testing.T) {
 	defer DB.Close()
 
 	for i, tc := range testcases {
-
-		//rows := sqlmock.NewRows([]string{"Id"}).AddRow(tc.req.Id)
-
-		//mock.ExpectQuery("SELECT Id FROM Author WHERE FirstName=? AND LastName=? AND  Dob=? AND PenName=? AND Id =?").WithArgs(tc.req.FirstName, tc.req.LastName, tc.req.Dob, tc.req.PenName, tc.req.Id).WillReturnRows(rows).WillReturnError(tc.err)
-		mock.ExpectExec("INSERT INTO Author (Id, FirstName,LastName, Dob, PenName) VALUES (?, ? , ?, ?, ?)").WithArgs(tc.req.Id, tc.req.FirstName, tc.req.LastName, tc.req.Dob, tc.req.PenName).WillReturnResult(sqlmock.NewResult(0, tc.expOut))
+		mock.ExpectExec("INSERT INTO Author (Id, FirstName,LastName, Dob, PenName) VALUES (?, ? , ?, ?, ?)").WithArgs(tc.req.Id,
+			tc.req.FirstName, tc.req.LastName, tc.req.Dob, tc.req.PenName).WillReturnResult(sqlmock.NewResult(0, tc.expOut))
 
 		a := New(DB)
 		res, err := a.PostAuthor(context.Background(), tc.req)
 		if err != tc.err && res != tc.expOut {
 			t.Errorf("Test %d case failed", i)
 		}
-
 	}
 }
 
-// put author -- completed
 func TestPutAuthor(t *testing.T) {
 	testcases := []struct {
 		desc   string
@@ -126,25 +104,18 @@ func TestPutAuthor(t *testing.T) {
 	}
 	defer db.Close()
 	for _, tc := range testcases {
-
 		mock.ExpectExec("UPDATE Author SET FirstName = ?, LastName = ?, Dob = ? , PenName = ?, Id=?  WHERE Id =?").WithArgs(
 			tc.input.FirstName, tc.input.LastName, tc.input.Dob, tc.input.PenName, tc.input.Id, tc.id).WillReturnError(tc.err)
-		//fmt.Println("ME")
-		a := New(db)
-		//fmt.Println("Hii")
 
+		a := New(db)
 		res, err := a.PutAuthor(context.Background(), tc.input, tc.id)
-		fmt.Println("Hello")
 
 		if tc.err != err && res != tc.expOut {
 			t.Errorf("Test case failed")
 		}
-
 	}
-
 }
 
-// delete author completed
 func TestDeleteAuthor(t *testing.T) {
 	testcases := []struct {
 		desc   string
@@ -157,7 +128,6 @@ func TestDeleteAuthor(t *testing.T) {
 	}
 
 	for i, tc := range testcases {
-
 		DB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		if err != nil {
 			log.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -171,5 +141,4 @@ func TestDeleteAuthor(t *testing.T) {
 			t.Errorf("failed %d for %v\n", i, tc.desc)
 		}
 	}
-
 }

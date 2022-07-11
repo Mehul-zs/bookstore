@@ -1,8 +1,8 @@
 package main
 
 import (
-	datastoreAuthor "Bookstore/datastores/Author"
-	datastoreBook "Bookstore/datastores/book"
+	datastoreAuthor "Bookstore/datastore/Author"
+	datastoreBook "Bookstore/datastore/book"
 	handlerAuthor "Bookstore/handlers/Author"
 	handlerBook "Bookstore/handlers/books"
 	"Bookstore/services/serviceBook"

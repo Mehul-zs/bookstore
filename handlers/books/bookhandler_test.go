@@ -4,12 +4,10 @@ import (
 	"Bookstore/entities"
 	"bytes"
 	"encoding/json"
-	"errors"
 	"github.com/gorilla/mux"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -171,89 +169,90 @@ func TestBookhandler_DeleteBook(t *testing.T) {
 
 type mock struct{}
 
-func (m mock) GetAll(title string, getAuthor string) ([]entities.Books, error) {
-	return []entities.Books{
-		{
-			Id:     1,
-			Title:  "Jail",
-			Author: entities.Author{
-				//Id:        2,
-				//FirstName: "Charles",
-				//LastName:  "Lee",
-				//Dob:       "12/01/1942",
-				//PenName:   "CL",
-			},
-			Publication:   "Penguin",
-			PublishedDate: "12/02/1970",
-			AuthorID:      2,
-		}}, nil
-}
-
-func (m mock) GetByID(id int) (entities.Books, error) {
-	if id <= 0 {
-		return entities.Books{}, errors.New("invalid")
-	}
-	return entities.Books{
-		Id:    1,
-		Title: "Mehul",
-		Author: entities.Author{
-			Id:        1,
-			FirstName: "Charles",
-			LastName:  "Lee",
-			Dob:       "12/01/1942",
-			PenName:   "CL",
-		},
-		Publication:   "Penguin",
-		PublishedDate: "12/02/1970",
-		AuthorID:      1,
-	}, nil
-}
-
-func (m mock) PostBook(books entities.Books) (int64, error) {
-	if !chkbook(books) {
-		return http.StatusBadRequest, errors.New("Invalid book")
-	}
-
-	if !chkauthor(books.Author) {
-		return http.StatusBadRequest, errors.New("Invalid Author")
-	}
-	return http.StatusCreated, nil
-
-}
-
-func (m mock) PutBook(books entities.Books, id int) (entities.Books, error) {
-	return entities.Books{}, nil
-}
-
-func (m mock) DeleteBook(id int) (int64, error) {
-	if id <= 0 {
-		return http.StatusBadRequest, errors.New("invalid id")
-	}
-	return 1, nil
-}
-
-func chkbook(b entities.Books) bool {
-	date := strings.Split(b.PublishedDate, "/")
-	sz := 3
-
-	switch {
-	case b.Publication != "Penguin" && b.Publication != "Scholastic" && b.Publication != "Arihanth":
-		return false
-	case len(date) < sz:
-		return false
-	case date[2] >= "2022" || date[2] < "1880":
-		return false
-	case b.Title == "":
-		return false
-	default:
-		return true
-	}
-}
-
-func chkauthor(author entities.Author) bool {
-	if author.FirstName == "" || author.LastName == "" || author.Dob == "" || author.PenName == "" || author.Id <= 0 {
-		return false
-	}
-
-	return true
-}
+//
+//func (m mock) GetAll(title string, getAuthor string) ([]entities.Books, error) {
+//	return []entities.Books{
+//		{
+//			Id:     1,
+//			Title:  "Jail",
+//			Author: entities.Author{
+//				//Id:        2,
+//				//FirstName: "Charles",
+//				//LastName:  "Lee",
+//				//Dob:       "12/01/1942",
+//				//PenName:   "CL",
+//			},
+//			Publication:   "Penguin",
+//			PublishedDate: "12/02/1970",
+//			AuthorID:      2,
+//		}}, nil
+//}
+//
+//func (m mock) GetByID(id int) (entities.Books, error) {
+//	if id <= 0 {
+//		return entities.Books{}, errors.New("invalid")
+//	}
+//	return entities.Books{
+//		Id:    1,
+//		Title: "Mehul",
+//		Author: entities.Author{
+//			Id:        1,
+//			FirstName: "Charles",
+//			LastName:  "Lee",
+//			Dob:       "12/01/1942",
+//			PenName:   "CL",
+//		},
+//		Publication:   "Penguin",
+//		PublishedDate: "12/02/1970",
+//		AuthorID:      1,
+//	}, nil
+//}
+//
+//func (m mock) PostBook(books entities.Books) (int64, error) {
+//	if !chkbook(books) {
+//		return http.StatusBadRequest, errors.New("Invalid book")
+//	}
+//
+//	if !chkauthor(books.Author) {
+//		return http.StatusBadRequest, errors.New("Invalid Author")
+//	}
+//	return http.StatusCreated, nil
+//
+//}
+//
+//func (m mock) PutBook(books entities.Books, id int) (entities.Books, error) {
+//	return entities.Books{}, nil
+//}
+//
+//func (m mock) DeleteBook(id int) (int64, error) {
+//	if id <= 0 {
+//		return http.StatusBadRequest, errors.New("invalid id")
+//	}
+//	return 1, nil
+//}
+//
+//func chkbook(b entities.Books) bool {
+//	date := strings.Split(b.PublishedDate, "/")
+//	sz := 3
+//
+//	switch {
+//	case b.Publication != "Penguin" && b.Publication != "Scholastic" && b.Publication != "Arihanth":
+//		return false
+//	case len(date) < sz:
+//		return false
+//	case date[2] >= "2022" || date[2] < "1880":
+//		return false
+//	case b.Title == "":
+//		return false
+//	default:
+//		return true
+//	}
+//}
+//
+//func chkauthor(author entities.Author) bool {
+//	if author.FirstName == "" || author.LastName == "" || author.Dob == "" || author.PenName == "" || author.Id <= 0 {
+//		return false
+//	}
+//
+//	return true
+//}

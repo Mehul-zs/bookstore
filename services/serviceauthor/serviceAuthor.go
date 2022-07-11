@@ -1,7 +1,7 @@
 package serviceauthor
 
 import (
-	datastore "Bookstore/datastores"
+	datastore "Bookstore/datastore"
 	"Bookstore/entities"
 	"context"
 	"errors"

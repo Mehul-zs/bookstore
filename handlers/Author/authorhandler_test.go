@@ -1,9 +1,10 @@
 package handlerauthor
 
 import (
-	"Bookstore/entities"
+	"Bookstore/services"
 	"bytes"
 	"errors"
+	"github.com/golang/mock/gomock"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -46,11 +47,15 @@ func TestDeleteAuthor(t *testing.T) {
 		{"Invalid input", "-1", http.StatusBadRequest, errors.New("invalid id")},
 		{"Valid inout", "1", http.StatusNoContent, nil},
 	}
+
+	mockControl := gomock.NewController(t)
+	defer mockControl.Finish()
+
 	for i, tc := range testcases {
+		mockServiceAuthor := services.NewMock
+
 		req := httptest.NewRequest("DELETE", "/author/{id}"+tc.ID, nil)
 		rw := httptest.NewRecorder()
-
-		a := New(mockDatastore{})
 
 		a.DeleteAuthor(rw, req)
 
@@ -59,20 +64,4 @@ func TestDeleteAuthor(t *testing.T) {
 		}
 
 	}
-}
-
-type mockDatastore struct{}
-
-func (m mockDatastore) PostAuthor(a entities.Author) (int64, error) {
-
-	return 0, nil
-
-}
-
-func (m mockDatastore) PutAuthor(a entities.Author, id int) (entities.Author, error) {
-	return entities.Author{}, nil
-}
-
-func (m mockDatastore) DeleteAuthor(id int) (int64, error) {
-	return 0, nil
 }

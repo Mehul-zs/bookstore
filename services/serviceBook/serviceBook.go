@@ -1,7 +1,7 @@
 package serviceBook
 
 import (
-	datastore "Bookstore/datastores"
+	datastore "Bookstore/datastore"
 	"Bookstore/entities"
 	"context"
 	"errors"
@@ -50,7 +50,7 @@ func (bs serviceBook) PostBook(ctx context.Context, books entities.Book) (int64,
 		return 0, err
 	}
 	if !res {
-		return bs.bookstore.PostBook(ctx, books)
+		return bs.bookstore.PostBook(ctx, &books)
 	}
 	return 0, errors.New("book Already exists")
 

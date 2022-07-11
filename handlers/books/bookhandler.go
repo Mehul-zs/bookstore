@@ -46,11 +46,6 @@ func (b Bookhandler) GetAllBooks(rw http.ResponseWriter, req *http.Request) {
 func (b Bookhandler) GetBookByID(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	vars := mux.Vars(req)
-	//id, ok := vars["id"]
-	//if !ok {
-	//	log.Fatalln("id is missing")
-	//}
-	//fmt.Println(`id: `, id)
 
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -97,13 +92,16 @@ func (b Bookhandler) PostBook(rw http.ResponseWriter, req *http.Request) {
 		//fmt.Println("Hiii")
 		//_, _ = rw.Write([]byte("Could not post book"))
 		rw.WriteHeader(http.StatusInternalServerError)
-		_, _ = rw.Write([]byte("Error in put method"))
+		rw.Write([]byte("Error in put method"))
 
 		return
 	}
 
 	//rw.WriteHeader(http.StatusCreated)
 	res, err := json.Marshal(resp)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+	}
 	rw.Write(res)
 }
 
@@ -129,14 +127,14 @@ func (b Bookhandler) PutBook(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		//fmt.Println("Hello handler")
 		rw.WriteHeader(http.StatusBadRequest)
-		_, _ = rw.Write([]byte("Invalid book id"))
+		rw.Write([]byte("Invalid book id"))
 		return
 	}
 
 	resp, err := b.serviceBook.PutBook(ctx, book, id)
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
-		_, _ = rw.Write([]byte("Error in put method"))
+		rw.Write([]byte("Error in put method"))
 		return
 	}
 	body, err = json.Marshal(resp)
