@@ -3,8 +3,8 @@ package handlerbook
 import (
 	"Bookstore/entities"
 	"Bookstore/services"
+	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"io"
 	"log"
@@ -23,7 +23,7 @@ func New(s services.Book) Bookhandler {
 //get all books  - completed
 func (b Bookhandler) GetAllBooks(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	title := req.URL.Query().Get("Title")
+	title := req.URL.Query().Get("title")
 	getauthor := req.URL.Query().Get("getauthor")
 
 	res, err := b.serviceBook.GetAllBooks(ctx, title, getauthor)
@@ -49,11 +49,12 @@ func (b Bookhandler) GetBookByID(rw http.ResponseWriter, req *http.Request) {
 
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		log.Fatalln("id not converted into string, error")
+		log.Println("id not converted into string, error")
+		rw.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	res, err := b.serviceBook.GetBookByID(ctx, id)
 	if err != nil {
-		_, _ = rw.Write([]byte("Could not post book"))
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -69,55 +70,47 @@ func (b Bookhandler) GetBookByID(rw http.ResponseWriter, req *http.Request) {
 
 }
 
-// post a book  - completed  -- 1 for book posted and  0 for book not posted
 func (b Bookhandler) PostBook(rw http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
 	var book entities.Book
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		//fmt.Println("Post handler error")
 		rw.WriteHeader(http.StatusBadRequest)
-		_, _ = rw.Write([]byte("invalid Author"))
+		rw.Write([]byte("invalid Author"))
 		return
 	}
 	err = json.Unmarshal(body, &book)
-
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	resp, err := b.serviceBook.PostBook(ctx, book)
+	resp, err := b.serviceBook.PostBook(context.Background(), book)
 	if err != nil {
-		fmt.Println(err)
-		//fmt.Println("Hiii")
-		//_, _ = rw.Write([]byte("Could not post book"))
+		//fmt.Println(err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		rw.Write([]byte("Error in put method"))
-
 		return
 	}
 
-	//rw.WriteHeader(http.StatusCreated)
-	res, err := json.Marshal(resp)
+	_, err = json.Marshal(resp)
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 	}
-	rw.Write(res)
+	rw.WriteHeader(http.StatusCreated)
+	//rw.Write(res)
 }
 
-// put a book by id   - completed
 func (b Bookhandler) PutBook(rw http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
 	var book entities.Book
 	body, err := io.ReadAll(req.Body)
 
 	if err != nil {
-		log.Fatalln("Error in data")
+		log.Println("Error in data")
+		rw.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	err = json.Unmarshal(body, &book)
 	if err != nil {
-		//fmt.Println("Hello handler")
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -125,13 +118,12 @@ func (b Bookhandler) PutBook(rw http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	id, err := strconv.Atoi(params["id"])
 	if err != nil {
-		//fmt.Println("Hello handler")
 		rw.WriteHeader(http.StatusBadRequest)
 		rw.Write([]byte("Invalid book id"))
 		return
 	}
 
-	resp, err := b.serviceBook.PutBook(ctx, book, id)
+	resp, err := b.serviceBook.PutBook(context.Background(), book, id)
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
 		rw.Write([]byte("Error in put method"))
@@ -141,28 +133,22 @@ func (b Bookhandler) PutBook(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Fatalln("Marshalling error in put handler")
 	}
-	//rw.WriteHeader(http.StatusAccepted) //202 request accpeted but processing i not completed
+	rw.WriteHeader(http.StatusAccepted) //202 request accpeted but processing i not completed
 	rw.Write(body)
 }
 
-// delete a book by id  - completed
 func (b Bookhandler) DeleteBook(rw http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
 	vars := mux.Vars(req)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		//fmt.Println("Hello Delete func")
-		//_, _ = rw.Write([]byte("invalid parameter id"))
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	_, err = b.serviceBook.DeleteBook(ctx, id)
+	_, err = b.serviceBook.DeleteBook(context.Background(), id)
 	if err != nil {
-		//_, _ = rw.Write([]byte("could not retrieve book"))
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	fmt.Println("Hello deleted")
 	rw.WriteHeader(http.StatusNoContent)
 	return
 }

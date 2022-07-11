@@ -87,3 +87,31 @@ func (bs Bookstore) CheckBook(ctx context.Context, id int) (bool, error) {
 	}
 	return true, nil
 }
+
+func (bs Bookstore) GetAllBooksByTitle(ctx context.Context, title string) ([]entities.Book, error) {
+	var (
+		books []entities.Book
+		Rows  *sql.Rows
+		err   error
+	)
+
+	Rows, err = bs.db.Query("SELECT * FROM books WHERE title=?", title)
+	if err != nil {
+		log.Print(err)
+		return []entities.Book{}, err
+	}
+	defer Rows.Close()
+
+	for Rows.Next() {
+		var book entities.Book
+
+		err = Rows.Scan(&book.Id, &book.Title, &book.Publication, &book.PublishedDate, &book.Author.Id)
+		if err != nil {
+			return []entities.Book{}, err
+		}
+
+		books = append(books, book)
+	}
+
+	return books, nil
+}

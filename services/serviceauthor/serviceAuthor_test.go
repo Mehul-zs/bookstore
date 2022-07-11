@@ -1,8 +1,11 @@
 package serviceauthor
 
 import (
+	"Bookstore/datastore"
 	"Bookstore/entities"
+	"context"
 	"errors"
+	"github.com/golang/mock/gomock"
 	"log"
 	"net/http"
 	"testing"
@@ -57,7 +60,6 @@ func TestPutAuthor(t *testing.T) {
 	}
 
 	for i, tc := range testcases {
-		a := New(mockdatastore{})
 		res, err := a.PutAuthor(tc.req, tc.id)
 		if err != tc.err && tc.expOut != res {
 			t.Errorf("testcase:%d desc :%s actualError:%v actualResult:%v expectedError:%v expectedResult:%v", i, tc.desc, err, res, tc.err, tc.expOut)
@@ -79,9 +81,12 @@ func TestDeleteAuthor(t *testing.T) {
 		//{"Invalid AuthorId", , http.StatusBadRequest, errors.New("not valid id")},
 	}
 
+	mockCntrl := gomock.NewController(t)
+	mockStore := datastore.NewMockAuthorStore(mockCntrl)
+	a := New(mockStore)
+
 	for i, tc := range testcases {
-		a := New(mockdatastore{})
-		res, err := a.DeleteAuthor(tc.input)
+		res, err := a.DeleteAuthor(context.Background(),tc.input)
 		if err != nil {
 			log.Print(err)
 		}
@@ -91,29 +96,4 @@ func TestDeleteAuthor(t *testing.T) {
 		}
 
 	}
-}
-
-type mockdatastore struct{}
-
-func (m mockdatastore) PostAuthor(author entities.Author) (int64, error) {
-	if author.Id == 10 {
-		return http.StatusCreated, nil
-	}
-
-	return http.StatusBadRequest, errors.New(" Duplicate entry '1' for key 'Author.PRIMARY'")
-}
-
-func (m mockdatastore) PutAuthor(author entities.Author, id int) (entities.Author, error) {
-	if author.Id == 1 {
-		return entities.Author{Id: 1, FirstName: "Mehul", LastName: "Rawal", Dob: "06/05/2001", PenName: "me"}, nil
-	}
-
-	return entities.Author{}, errors.New("invalid author details")
-}
-
-func (m mockdatastore) DeleteAuthor(id int) (int64, error) {
-	if id == 1 {
-		return http.StatusNoContent, nil
-	}
-	return http.StatusBadRequest, errors.New("??")
 }

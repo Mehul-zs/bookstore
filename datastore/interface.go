@@ -9,6 +9,7 @@ import (
 
 type BookStore interface {
 	GetAllBooks(ctx context.Context, a string, b string) ([]entities.Book, error)
+	GetAllBooksByTitle(ctx context.Context, title string) ([]entities.Book, error)
 	GetBookByID(ctx context.Context, id int) (entities.Book, error)
 	PostBook(ctx context.Context, books *entities.Book) (int64, error)
 	PutBook(ctx context.Context, books entities.Book, id int) (entities.Book, error)

@@ -71,11 +71,11 @@ func (s ServiceAuthor) DeleteAuthor(ctx context.Context, id int) (int64, error) 
 		return 0, errors.New("negative id not accpeted")
 	}
 
-	_, err := s.authorstore.DeleteAuthor(ctx, id)
+	row, err := s.authorstore.DeleteAuthor(ctx, id)
 	if err != nil {
 		return 0, errors.New("not valid id")
 	}
 
-	return 1, nil
+	return row, nil
 	//return 0, nil
 }
