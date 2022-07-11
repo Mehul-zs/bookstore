@@ -5,6 +5,8 @@ import (
 	"context"
 )
 
+//go:generate mockgen -destination=mockInterface.go -package=datastore -source=interface.go
+
 type BookStore interface {
 	GetAllBooks(ctx context.Context, a string, b string) ([]entities.Book, error)
 	GetBookByID(ctx context.Context, id int) (entities.Book, error)

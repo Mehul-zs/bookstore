@@ -81,10 +81,9 @@ func BookExists(book *entities.Book, authId int64, b Bookstore) bool {
 }
 
 func (bs Bookstore) CheckBook(ctx context.Context, id int) (bool, error) {
-	row, err := bs.db.Query("select * from Books where BookId=?", id)
-	if err != nil || !row.Next() {
+	_, err := bs.db.Query("select * from Books where Id=?", id)
+	if err != nil {
 		return false, err
 	}
-
 	return true, nil
 }

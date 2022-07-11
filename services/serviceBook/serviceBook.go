@@ -5,6 +5,7 @@ import (
 	"Bookstore/entities"
 	"context"
 	"errors"
+	"fmt"
 )
 
 type serviceBook struct {
@@ -28,28 +29,26 @@ func (bs serviceBook) GetAllBooks(ctx context.Context, title string, getAuthor s
 	return books, nil
 }
 
-/////// get book by id  -- completed
+/////// get book by id  -- completed, running properly
 func (bs serviceBook) GetBookByID(ctx context.Context, id int) (entities.Book, error) {
 	res, err := bs.bookstore.CheckBook(ctx, id)
 	if err != nil {
 		return entities.Book{}, err
 	}
-
 	if res {
 		return bs.bookstore.GetBookByID(ctx, id)
 	}
-
 	return entities.Book{}, errors.New("book does not exists")
-
 }
 
 //// post book - completed
 func (bs serviceBook) PostBook(ctx context.Context, books entities.Book) (int64, error) {
 	res, err := bs.bookstore.CheckBook(ctx, books.Id)
 	if err != nil {
+		fmt.Println("Hello post book")
 		return 0, err
 	}
-	if !res {
+	if res {
 		return bs.bookstore.PostBook(ctx, &books)
 	}
 	return 0, errors.New("book Already exists")

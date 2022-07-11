@@ -42,7 +42,7 @@ func (b Bookhandler) GetAllBooks(rw http.ResponseWriter, req *http.Request) {
 
 }
 
-//get book by id  - completed
+//get book by id  - completed running properly
 func (b Bookhandler) GetBookByID(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	vars := mux.Vars(req)
@@ -69,7 +69,7 @@ func (b Bookhandler) GetBookByID(rw http.ResponseWriter, req *http.Request) {
 
 }
 
-// post a book  - completed
+// post a book  - completed  -- 1 for book posted and  0 for book not posted
 func (b Bookhandler) PostBook(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	var book entities.Book
@@ -162,6 +162,7 @@ func (b Bookhandler) DeleteBook(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	fmt.Println("Hello deleted")
 	rw.WriteHeader(http.StatusNoContent)
 	return
 }

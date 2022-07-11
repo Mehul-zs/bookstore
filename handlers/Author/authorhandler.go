@@ -59,16 +59,15 @@ func (a AuthorHandler) PutAuthor(rw http.ResponseWriter, req *http.Request) {
 	var author entities.Author
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		//fmt.Println("Hello handler")
 		rw.WriteHeader(http.StatusBadRequest)
 		rw.Write([]byte("Invalid Author"))
 		return
 	}
+	fmt.Println("Hello handler")
 	err = json.Unmarshal(body, &author)
 	if err != nil {
-
+		rw.WriteHeader(http.StatusBadRequest)
 	}
-
 	params := mux.Vars(req)
 	id, err := strconv.Atoi(params["id"])
 	if err != nil {
@@ -82,6 +81,7 @@ func (a AuthorHandler) PutAuthor(rw http.ResponseWriter, req *http.Request) {
 		rw.Write([]byte("Error in put method"))
 		return
 	}
+
 	body, _ = json.Marshal(res)
 	rw.Write(body)
 

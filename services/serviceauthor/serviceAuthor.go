@@ -5,6 +5,7 @@ import (
 	"Bookstore/entities"
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -46,19 +47,20 @@ func (s ServiceAuthor) PutAuthor(ctx context.Context, a entities.Author, id int)
 	if id <= 0 {
 		return entities.Author{}, errors.New("negative ID params")
 	}
-
-	chk, err := s.authorstore.CheckAuthor(ctx, a)
+	_, err := s.authorstore.CheckAuthor(ctx, a)
 	if err != nil {
 		return entities.Author{}, err
 	}
-	if chk != 0 {
-		author, err := s.authorstore.PutAuthor(ctx, a, id)
-		if err != nil {
-			return entities.Author{}, err
-		}
 
-		return author, nil
+	author, err := s.authorstore.PutAuthor(ctx, a, id)
+	if err != nil {
+		return entities.Author{}, err
 	}
+	fmt.Println("Hello handler 4")
+
+	return author, nil
+	fmt.Println("Hello handler 10")
+
 	//return entities.Author{}
 	return entities.Author{}, err
 }

@@ -42,6 +42,7 @@ func (a Authorstore) CheckAuthor(ctx context.Context, author entities.Author) (i
 		return 0, errors.New("author alreadyexists")
 	}
 	if res.Next() {
+		fmt.Println("Hello data")
 		return 1, nil
 	}
 	return 0, nil
