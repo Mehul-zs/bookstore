@@ -3,11 +3,8 @@ package serviceBook
 import (
 	datastore "Bookstore/datastores"
 	"Bookstore/entities"
+	"context"
 	"errors"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type serviceBook struct {
@@ -18,11 +15,11 @@ func New(b datastore.BookStore) serviceBook {
 	return serviceBook{b}
 }
 
-func (bs serviceBook) GetAll(title string, getAuthor string) ([]entities.Books, error) {
+func (bs serviceBook) GetAllBooks(ctx context.Context, title string, getAuthor string) ([]entities.Book, error) {
 
-	var books []entities.Books
+	var books []entities.Book
 	//fmt.Println("hello Mehul")
-	books, err := bs.bookstore.GetAll(title, getAuthor)
+	books, err := bs.bookstore.GetAllBooks(ctx, title, getAuthor)
 	if err != nil {
 		//fmt.Println("hello get all service layer")
 		return nil, nil
@@ -31,89 +28,59 @@ func (bs serviceBook) GetAll(title string, getAuthor string) ([]entities.Books, 
 	return books, nil
 }
 
-func (bs serviceBook) GetByID(id int) (entities.Books, error) {
-	if id <= 0 {
-		return entities.Books{}, errors.New("Negative book id")
-	}
-	var book entities.Books
-	book, err := bs.bookstore.GetByID(id)
+/////// get book by id  -- completed
+func (bs serviceBook) GetBookByID(ctx context.Context, id int) (entities.Book, error) {
+	res, err := bs.bookstore.CheckBook(ctx, id)
 	if err != nil {
-		return entities.Books{}, nil
-	}
-	return book, nil
-}
-
-func (bs serviceBook) PostBook(books entities.Books) (int64, error) {
-	if books.Title == "" || books.Author.FirstName == "" {
-		return http.StatusBadRequest, nil
+		return entities.Book{}, err
 	}
 
-	if books.Publication != "Scholastic" && books.Publication != "Arihant" && books.Publication != "Penguin" {
-		//log.Print("Invalid Publication")
-		return http.StatusBadRequest, nil
+	if res {
+		return bs.bookstore.GetBookByID(ctx, id)
 	}
 
-	publishedDate := strings.Split(books.PublishedDate, "/")
-	if len(publishedDate) < 3 {
-		return http.StatusBadRequest, errors.New("Invalid  published date")
-	}
-	yr, _ := strconv.Atoi(publishedDate[2])
-
-	if yr >= 2022 || yr < 1880 {
-		return http.StatusBadRequest, errors.New("invalid published year")
-
-	}
-
-	_, err := bs.bookstore.PostBook(books)
-	if err != nil {
-		return http.StatusBadRequest, nil
-	}
-
-	return http.StatusCreated, nil
+	return entities.Book{}, errors.New("book does not exists")
 
 }
 
-func (bs serviceBook) PutBook(book entities.Books, id int) (entities.Books, error) {
+//// post book - completed
+func (bs serviceBook) PostBook(ctx context.Context, books entities.Book) (int64, error) {
+	res, err := bs.bookstore.CheckBook(ctx, books.Id)
+	if err != nil {
+		return 0, err
+	}
+	if !res {
+		return bs.bookstore.PostBook(ctx, books)
+	}
+	return 0, errors.New("book Already exists")
+
+}
+
+//// put book completed
+func (bs serviceBook) PutBook(ctx context.Context, book entities.Book, id int) (entities.Book, error) {
 	//fmt.Println("Hello Put book")
-	if book.Title == "" {
-		//fmt.Println("Hello put title is empty")
-		return entities.Books{}, nil
-	}
-	if book.Publication != "Scholastic" && book.Publication != "Arihant" && book.Publication != "Penguin" {
-		//log.Print("Invalid Publication")
-		return entities.Books{}, nil
+
+	res, err := bs.bookstore.CheckBook(ctx, id)
+	if err != nil {
+		return entities.Book{}, err
 	}
 
-	publicationDate := strings.Split(book.PublishedDate, "/")
-	if len(publicationDate) < 3 {
-		//fmt.Println("Hello publication date")
-		return entities.Books{}, nil
+	if res == true {
+		return bs.bookstore.PutBook(ctx, book, id)
 	}
-	yr, _ := strconv.Atoi(publicationDate[2])
-	if yr > time.Now().Year() || yr < 1880 {
-		return entities.Books{}, nil
-	}
-	//fmt.Println("Hello entering daatastore put book")
-	books, err := bs.bookstore.PutBook(book, id)
-	if err != nil {
-		//fmt.Println("Hello books")
-		return entities.Books{}, nil
-	}
-	//fmt.Println("Hello Mehul")
-	return books, nil
+
+	return entities.Book{}, errors.New("book id does not exists")
 
 }
 
-func (bs serviceBook) DeleteBook(id int) (int64, error) {
+// delete book - completed
+func (bs serviceBook) DeleteBook(ctx context.Context, id int) (int64, error) {
 
-	if id <= 0 {
-		return http.StatusBadRequest, errors.New("Negative ID params")
-	}
-
-	_, err := bs.bookstore.DeleteBook(id)
+	res, err := bs.bookstore.DeleteBook(ctx, id)
 	if err != nil {
-		return http.StatusBadRequest, errors.New("not valid id")
+		return 0, err
 	}
 
-	return http.StatusNoContent, nil
+	return res, nil
+
 }

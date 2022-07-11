@@ -67,11 +67,11 @@ func TestBookhandler_GetByID(t *testing.T) {
 	testcases := []struct {
 		desc          string
 		id            string
-		expOut        entities.Books
+		expOut        entities.Book
 		expStatusCode int
 	}{
 
-		{"invalid", "-1", entities.Books{}, http.StatusBadRequest},
+		{"invalid", "-1", entities.Book{}, http.StatusBadRequest},
 	}
 
 	for i, tc := range testcases {
@@ -81,7 +81,7 @@ func TestBookhandler_GetByID(t *testing.T) {
 		rw := httptest.NewRecorder()
 		a := New(mock{})
 
-		a.GetByID(rw, req)
+		a.GetBookByID(rw, req)
 
 		if !reflect.DeepEqual(rw.Result().StatusCode, tc.expStatusCode) {
 			t.Errorf("[TEST%d]Failed. Got %v\tExpected %v\n", i, rw.Result().StatusCode, tc.expStatusCode)
@@ -94,10 +94,10 @@ func TestBookhandler_GetByID(t *testing.T) {
 
 func TestBookhandler_PostBook(t *testing.T) {
 	testcases := []struct {
-		input     entities.Books
+		input     entities.Book
 		expStatus int64
 	}{
-		{entities.Books{
+		{entities.Book{
 			Id:    10,
 			Title: "James",
 			Author: entities.Author{

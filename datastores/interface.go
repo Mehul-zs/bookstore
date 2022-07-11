@@ -2,18 +2,22 @@ package datastore
 
 import (
 	"Bookstore/entities"
+	"context"
 )
 
 type BookStore interface {
-	GetAll(string, string) ([]entities.Books, error)
-	GetByID(int) (entities.Books, error)
-	PostBook(books entities.Books) (int64, error)
-	PutBook(books entities.Books, id int) (entities.Books, error)
-	DeleteBook(int) (int64, error)
+	GetAllBooks(ctx context.Context, a string, b string) ([]entities.Book, error)
+	GetBookByID(ctx context.Context, id int) (entities.Book, error)
+	PostBook(ctx context.Context, books entities.Book) (int64, error)
+	PutBook(ctx context.Context, books entities.Book, id int) (entities.Book, error)
+	DeleteBook(ctx context.Context, id int) (int64, error)
+	CheckBook(ctx context.Context, id int) (bool, error)
 }
 
 type AuthorStore interface {
-	PostAuthor(author entities.Author) (int64, error)
-	PutAuthor(author entities.Author, id int) (entities.Author, error)
-	DeleteAuthor(int) (int64, error)
+	GetAllAuthor(ctx context.Context) ([]entities.Author, error)
+	CheckAuthor(ctx context.Context, author entities.Author) (int, error)
+	PostAuthor(ctx context.Context, author entities.Author) (int64, error)
+	PutAuthor(ctx context.Context, author entities.Author, id int) (entities.Author, error)
+	DeleteAuthor(ctx context.Context, id int) (int64, error)
 }

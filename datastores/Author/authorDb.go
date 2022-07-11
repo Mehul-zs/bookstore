@@ -2,10 +2,10 @@ package datastoreauthor
 
 import (
 	"Bookstore/entities"
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
-	"net/http"
 )
 
 type Authorstore struct {
@@ -16,65 +16,92 @@ func New(db *sql.DB) Authorstore {
 	return Authorstore{db: db}
 }
 
-func (a Authorstore) PostAuthor(author entities.Author) (int64, error) {
-	res, err := a.db.Query("SELECT Id FROM Author WHERE FirstName=? AND LastName=? AND  Dob=? AND PenName=? AND Id =?", author.FirstName, author.LastName, author.Dob, author.PenName, author.Id)
+// get all author completed
+func (s Authorstore) GetAllAuthor(ctx context.Context) ([]entities.Author, error) {
+	rows, err := s.db.QueryContext(ctx, "SELECT * FROM Author")
 	if err != nil {
-		return http.StatusBadRequest, errors.New("Author Alreadyexists")
-
+		return nil, err
 	}
-	//fmt.Println(res.Next())
-	if !res.Next() || err != nil {
-		_, err := a.db.Exec("INSERT INTO Author (Id, FirstName,LastName, Dob, PenName) VALUES (?, ? , ?, ?, ?)", author.Id, author.FirstName, author.LastName, author.Dob, author.PenName)
+
+	defer rows.Close()
+
+	authors := make([]entities.Author, 0)
+
+	for rows.Next() {
+		var author entities.Author
+		err = rows.Scan(author.Id, author.FirstName, author.LastName, author.Dob, author.PenName)
 		if err != nil {
-			fmt.Println("Hello to db")
-			return http.StatusBadRequest, nil
+			return nil, err
 		}
-		//_, err = ans.LastInsertId()
-		return http.StatusCreated, nil
 
+		authors = append(authors, author)
 	}
-	return http.StatusBadRequest, nil
+
+	return authors, nil
 }
 
-func (a Authorstore) PutAuthor(author entities.Author, id int) (entities.Author, error) {
-	res, err := a.db.Query("SELECT Id FROM Author WHERE FirstName=? AND LastName=? AND  Dob=? AND PenName=?", author.FirstName, author.LastName, author.Dob, author.PenName)
-	if !res.Next() || err != nil {
-		_, err = a.db.Exec("UPDATE Author SET FirstName = ?, LastName = ?, Dob = ? , PenName = ?, Id=?  WHERE Id =?", author.FirstName, author.LastName, author.Dob, author.PenName, author.Id, author.Id)
+func (a Authorstore) CheckAuthor(ctx context.Context, author entities.Author) (int, error) {
 
-		if err != nil {
-			//fmt.Println("Put author error")
-			return entities.Author{}, nil
-		}
-		//fmt.Println("Hello mehul put author")
-		return author, nil
+	_, err := a.db.QueryContext(ctx, "SELECT Id FROM Author WHERE FirstName=? AND LastName=? AND  Dob=? AND PenName=? AND Id =?", author.FirstName, author.LastName, author.Dob, author.PenName, id)
+	if err != nil {
+		return 0, errors.New("Author Alreadyexists")
+
 	}
-	//fmt.Println("Hello")
+
+	return 1, nil
+}
+
+// post author - completed
+func (a Authorstore) PostAuthor(ctx context.Context, author entities.Author) (int64, error) {
+	res, err := a.db.ExecContext(ctx, "INSERT INTO Author (Id, FirstName,LastName, Dob, PenName) VALUES (?, ? , ?, ?, ?)", author.Id, author.FirstName, author.LastName, author.Dob, author.PenName)
+	if err != nil {
+		fmt.Println(err)
+		return 0, errors.New("Error")
+	}
+	ans, err := res.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	return ans, nil
+
+	//return http.StatusBadRequest, nil
+}
+
+// put author -- completed
+func (a Authorstore) PutAuthor(ctx context.Context, author entities.Author, id int) (entities.Author, error) {
+
+	//row := a.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM authors WHERE author_id=?", auth.AuthorID)
+
+	//err := row.Scan(&id)
+	//if err != nil {
+	//	res, err := a.db.ExecContext(ctx, "INSERT INTO authors(author_id, first_name, last_name, DOB, pen_name) VALUES(?,?,?,?,?)", auth.AuthorID, auth.FirstName, auth.LastName, auth.DOB, auth.PenName)
+	//	id, err := res.LastInsertId()
+	//
+	//	return id, nil
+	//} else {
+	_, err := a.db.ExecContext(ctx, "UPDATE Author SET author_id=?, first_name=?, last_name=?, DOB=?, pen_name=? WHERE author_id=?",
+		author.Id, author.FirstName, author.LastName, author.Dob, author.PenName, id)
+	if err != nil {
+		return entities.Author{}, err
+	}
+
 	return author, nil
+	//}
+
 }
 
-func (a Authorstore) DeleteAuthor(id int) (int64, error) {
-
-	check, err := a.db.Query("Select Id from Books WHERE AuthorId=?", id)
+// delete author - completed
+func (a Authorstore) DeleteAuthor(ctx context.Context, id int) (int64, error) {
+	res, err := a.db.ExecContext(ctx, "Delete from Author WHERE Id=?", id)
 	if err != nil {
-		return http.StatusBadRequest, nil
+		return 0, nil
 	}
-
-	for check.Next() {
-		var ID int
-		err = check.Scan(&ID)
-		if err != nil {
-			return http.StatusBadRequest, nil
-		}
-		_, err = a.db.Exec("Delete from Books WHERE Id=?", ID)
-		if err != nil {
-			return http.StatusBadRequest, nil
-		}
-	}
-
-	_, err = a.db.Exec("Delete from Author WHERE Id=?", id)
+	cnt, err := res.RowsAffected()
 	if err != nil {
-		return http.StatusBadRequest, nil
+		return 0, err
 	}
 
-	return http.StatusNoContent, nil
+	return cnt, err
+
+	//return http.StatusNoContent, nil
 }

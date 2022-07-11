@@ -1,17 +1,20 @@
 package services
 
-import "Bookstore/entities"
+import (
+	"Bookstore/entities"
+	"context"
+)
 
 type Book interface {
-	GetAll(string, string) ([]entities.Books, error)
-	GetByID(int) (entities.Books, error)
-	PostBook(book entities.Books) (int64, error)
-	PutBook(book entities.Books, id int) (entities.Books, error)
-	DeleteBook(int) (int64, error)
+	GetAllBooks(ctx context.Context, a string, b string) ([]entities.Book, error)
+	GetBookByID(ctx context.Context, id int) (entities.Book, error)
+	PostBook(ctx context.Context, book entities.Book) (int64, error)
+	PutBook(ctx context.Context, book entities.Book, id int) (entities.Book, error)
+	DeleteBook(ctx context.Context, id int) (int64, error)
 }
 
 type Author interface {
-	PostAuthor(author entities.Author) (int64, error)
-	PutAuthor(author entities.Author, id int) (entities.Author, error)
-	DeleteAuthor(int) (int64, error)
+	PostAuthor(ctx context.Context, author entities.Author) (int64, error)
+	PutAuthor(ctx context.Context, author entities.Author, id int) (entities.Author, error)
+	DeleteAuthor(ctx context.Context, id int) (int64, error)
 }

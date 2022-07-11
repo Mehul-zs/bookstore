@@ -56,7 +56,7 @@ func main() {
 	//fmt.Println(db)
 
 	//r.HandleFunc("/books", handlerbook.GetAll).Methods(http.MethodGet)
-	r.HandleFunc("/books/{id}", handlerbook.GetByID).Methods(http.MethodGet)
+	r.HandleFunc("/books/{id}", handlerbook.GetBookByID).Methods(http.MethodGet)
 
 	r.HandleFunc("/author", handlerauthor.PostAuthor).Methods(http.MethodPost)
 	r.HandleFunc("/book", handlerbook.PostBook).Methods(http.MethodPost)

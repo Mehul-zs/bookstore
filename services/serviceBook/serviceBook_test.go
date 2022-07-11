@@ -1,8 +1,12 @@
 package serviceBook
 
 import (
+	datastore "Bookstore/datastores"
 	"Bookstore/entities"
+	"context"
 	"errors"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 )
@@ -69,13 +73,13 @@ func TestServiceBook_PutBook(t *testing.T) {
 	testcases := []struct {
 		desc   string
 		id     int
-		input  entities.Books
-		expOut entities.Books
+		input  entities.Book
+		expOut entities.Book
 		err    error
 	}{
 		{"Valid book", 1,
-			entities.Books{Id: 3, Title: "Here we go", Author: entities.Author{Id: 5, FirstName: "Mehul", LastName: "Testing", Dob: "18/07/1960", PenName: "m"}, Publication: "Penguin", PublishedDate: "12/03/1980", AuthorID: 5},
-			entities.Books{Id: 3, Title: "Here we go", Author: entities.Author{Id: 5, FirstName: "Mehul", LastName: "Testing", Dob: "18/07/1960", PenName: "m"}, Publication: "Penguin", PublishedDate: "12/03/1980", AuthorID: 5},
+			entities.Book{Id: 3, Title: "Here we go", Author: entities.Author{Id: 5, FirstName: "Mehul", LastName: "Testing", Dob: "18/07/1960", PenName: "m"}, Publication: "Penguin", PublishedDate: "12/03/1980", AuthorID: 5},
+			entities.Book{Id: 3, Title: "Here we go", Author: entities.Author{Id: 5, FirstName: "Mehul", LastName: "Testing", Dob: "18/07/1960", PenName: "m"}, Publication: "Penguin", PublishedDate: "12/03/1980", AuthorID: 5},
 			nil},
 	}
 
@@ -91,48 +95,51 @@ func TestServiceBook_PutBook(t *testing.T) {
 
 func TestServiceBook_DeleteBook(t *testing.T) {
 	testcases := []struct {
-		desc      string
-		input     int
-		expStatus int64
-		err       error
+		desc   string
+		input  int
+		expOut int64
+		err    error
 	}{
 		{"Valid BookId", 2, http.StatusNoContent, nil},
 		{"Invalid BookId", -5, http.StatusBadRequest, errors.New("Negative ID params")},
 		{"Valid BookId", 4, http.StatusBadRequest, errors.New("invalid book details")},
 	}
 
-	for i, tc := range testcases {
-		b := New(mockDatastore{})
-		res, err := b.DeleteBook(tc.input)
-		if err != nil && res != tc.expStatus {
-			t.Errorf("testcase:%d desc:%v actualResult:%v actualError:%v expectedResponse:%v expectedError:%v", i, tc.desc, res, err, tc.expStatus, tc.err)
-			//write complete statement to cleara the details of the this statement
-		}
+	mockCntrl := gomock.NewController(t)
+	mockBookStore := datastore.NewMockBookStore(mockCntrl)
+	//mockAuthorstore := datastore.NewMockAuthorStore(mockCntrl)
+	//mockAuthorStore := authors.NewMockAuthor(mockCntrl)
+	mock := New(mockBookStore)
+	for _, tc := range testcases {
+		mockBookStore.EXPECT().DeleteBook(context.TODO(), tc.input).Return(tc.expOut, tc.err).AnyTimes()
+		res, _ := mock.DeleteBook(context.TODO()tc.input)
+		bookID, _ := mock.DeleteBook(context.TODO(), tc.input)
+		assert.Equal(t, tc.id, bookID)
 	}
 
 }
 
-type mockDatastore struct{}
-
-func (m mockDatastore) GetAll(title string, getAuthor string) ([]entities.Books, error) {
-	return []entities.Books{}, nil
-}
-
-func (m mockDatastore) GetByID(id int) (entities.Books, error) {
-	return entities.Books{}, nil
-}
-
-func (m mockDatastore) PostBook(books entities.Books) (int64, error) {
-	return 0, nil
-}
-
-func (m mockDatastore) PutBook(books entities.Books, id int) (entities.Books, error) {
-	return entities.Books{}, nil
-}
-
-func (m mockDatastore) DeleteBook(id int) (int64, error) {
-	if id == 2 {
-		return http.StatusNoContent, nil
-	}
-	return http.StatusBadRequest, errors.New("invalid book details")
-}
+//type mockDatastore struct{}
+//
+//func (m mockDatastore) GetAll(title string, getAuthor string) ([]entities.Books, error) {
+//	return []entities.Books{}, nil
+//}
+//
+//func (m mockDatastore) GetByID(id int) (entities.Books, error) {
+//	return entities.Books{}, nil
+//}
+//
+//func (m mockDatastore) PostBook(books entities.Books) (int64, error) {
+//	return 0, nil
+//}
+//
+//func (m mockDatastore) PutBook(books entities.Books, id int) (entities.Books, error) {
+//	return entities.Books{}, nil
+//}
+//
+//func (m mockDatastore) DeleteBook(id int) (int64, error) {
+//	if id == 2 {
+//		return http.StatusNoContent, nil
+//	}
+//	return http.StatusBadRequest, errors.New("invalid book details")
+//}
