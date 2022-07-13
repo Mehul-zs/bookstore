@@ -5,6 +5,7 @@ import (
 	"Bookstore/services"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"io"
 	"log"
@@ -28,12 +29,14 @@ func (b Bookhandler) GetAllBooks(rw http.ResponseWriter, req *http.Request) {
 
 	res, err := b.serviceBook.GetAllBooks(ctx, title, getauthor)
 	if err != nil {
+		fmt.Println(err)
 		rw.Write([]byte("Could not post book"))
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	body, err := json.Marshal(res)
 	if err != nil {
+		fmt.Println(err)
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -44,36 +47,34 @@ func (b Bookhandler) GetAllBooks(rw http.ResponseWriter, req *http.Request) {
 
 //get book by id  - completed running properly
 func (b Bookhandler) GetBookByID(rw http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
 	vars := mux.Vars(req)
-
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		log.Println("id not converted into string, error")
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	res, err := b.serviceBook.GetBookByID(ctx, id)
+	res, err := b.serviceBook.GetBookByID(context.Background(), id)
 	if err != nil {
+		fmt.Println(err)
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	body, err := json.Marshal(res)
-
 	if err != nil {
+		fmt.Println(err)
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	rw.WriteHeader(http.StatusOK)
+	//rw.WriteHeader(http.StatusOK)
 	rw.Write(body)
-
 }
 
 func (b Bookhandler) PostBook(rw http.ResponseWriter, req *http.Request) {
 	var book entities.Book
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
+		fmt.Println("Hello")
 		rw.WriteHeader(http.StatusBadRequest)
 		rw.Write([]byte("invalid Author"))
 		return
@@ -83,9 +84,9 @@ func (b Bookhandler) PostBook(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	resp, err := b.serviceBook.PostBook(context.Background(), book)
 	if err != nil {
-		//fmt.Println(err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		rw.Write([]byte("Error in put method"))
 		return
@@ -144,11 +145,17 @@ func (b Bookhandler) DeleteBook(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	_, err = b.serviceBook.DeleteBook(context.Background(), id)
+	res, err := b.serviceBook.DeleteBook(context.Background(), id)
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	rw.WriteHeader(http.StatusNoContent)
+	if res != 0 {
+		rw.WriteHeader(http.StatusNoContent)
+		//rw.Write([]byte("Book deleted"))
+		log.Println("book deleted")
+		return
+	}
+	rw.WriteHeader(http.StatusBadRequest)
 	return
 }

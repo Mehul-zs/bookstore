@@ -41,12 +41,13 @@ func main() {
 		return
 	}
 
+	authorstore := datastoreAuthor.New(db)
+
 	//mapping three layer architecture
 	bookstore := datastoreBook.New(db)
-	servicebook := serviceBook.New(bookstore)
+	servicebook := serviceBook.New(bookstore, authorstore)
 	handlerbook := handlerBook.New(servicebook)
 
-	authorstore := datastoreAuthor.New(db)
 	serviceauth := serviceauthor.New(authorstore)
 	handlerauthor := handlerAuthor.New(serviceauth)
 	//fmt.Println("Hello main")

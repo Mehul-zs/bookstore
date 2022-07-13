@@ -22,19 +22,19 @@ func (b Bookstore) GetAllBooks(ctx context.Context, title, getauthor string) ([]
 }
 
 func (b Bookstore) GetBookByID(ctx context.Context, id int) (entities.Book, error) {
-	bookrow := b.db.QueryRow("select * from Books where Id=?", id)
+	bookrow := b.db.QueryRowContext(ctx, "select * from Books where Id=?", id)
 	book := entities.Book{}
-	err := bookrow.Scan(&book.Id, &book.Title, &book.Publication, &book.PublishedDate, &book.Author.Id)
+	err := bookrow.Scan(&book.Id, &book.Title, &book.Publication, &book.PublishedDate, &book.AuthorID)
 
 	if err != nil {
 		return entities.Book{}, nil
 	}
-	authrow := b.db.QueryRow("select * from Author where Id=?", book.Author.Id)
-	err = authrow.Scan(&book.Author.Id, &book.Author.FirstName, &book.Author.LastName, &book.Author.Dob, &book.Author.PenName)
-	if err != nil {
-		log.Print(err)
-		return entities.Book{}, errors.New("invalid author id match")
-	}
+	//authrow := b.db.QueryRow("select * from Author where Id=?", book.Author.Id)
+	//err = authrow.Scan(&book.Author.Id, &book.Author.FirstName, &book.Author.LastName, &book.Author.Dob, &book.Author.PenName)
+	//if err != nil {
+	//	log.Print(err)
+	//	return entities.Book{}, errors.New("invalid author id match")
+	//}
 
 	return book, nil
 }
@@ -65,7 +65,7 @@ func (b Bookstore) PutBook(ctx context.Context, book entities.Book, id int) (ent
 func (b Bookstore) DeleteBook(ctx context.Context, id int) (int64, error) {
 	row, err := b.db.Exec("DELETE from Books WHERE Id=?", id)
 	cnt, _ := row.RowsAffected()
-	if err != nil || id == 0 {
+	if err != nil {
 		return 0, errors.New("No rows affected, id does not exist")
 	}
 	return cnt, nil
@@ -95,7 +95,7 @@ func (bs Bookstore) GetAllBooksByTitle(ctx context.Context, title string) ([]ent
 		err   error
 	)
 
-	Rows, err = bs.db.Query("SELECT * FROM books WHERE title=?", title)
+	Rows, err = bs.db.Query("SELECT * FROM Books WHERE title=?", title)
 	if err != nil {
 		log.Print(err)
 		return []entities.Book{}, err

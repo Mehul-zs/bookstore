@@ -73,9 +73,10 @@ func TestBookhandler_GetByID(t *testing.T) {
 		id            string
 		expOut        entities.Book
 		expStatusCode int
+		err           error
 	}{
 
-		{"invalid", "-1", entities.Book{}, http.StatusBadRequest},
+		{"invalid", "-1", entities.Book{}, http.StatusBadRequest, "negative id"},
 	}
 
 	mockCtrl := gomock.NewController(t)
@@ -88,8 +89,8 @@ func TestBookhandler_GetByID(t *testing.T) {
 		req = mux.SetURLVars(req, map[string]string{"id": tc.id})
 
 		rw := httptest.NewRecorder()
-		id, _ := strconv.Atoi(v.id)
-		mockServiceBook.EXPECT().GetBookByID(context.Background(), id).Return(v.expectedOutput, v.err).AnyTimes()
+		id, _ := strconv.Atoi(tc.id)
+		mockServiceBook.EXPECT().GetBookByID(context.Background(), id).Return(tc.expOut, tc.err).AnyTimes()
 		var expout entities.Book
 		b.GetBookByID(rw, req)
 		body, err := io.ReadAll(rw.Body)
@@ -207,7 +208,7 @@ func TestBookhandler_DeleteBook(t *testing.T) {
 		mockServiceBook.EXPECT().DeleteBook(context.Background(), ID).Return(1, tc.err).AnyTimes()
 		b.DeleteBook(rw, req)
 
-		if !reflect.DeepEqual(rw.Result().StatusCode, v.expStatus) {
+		if !reflect.DeepEqual(rw.Result().StatusCode, tc.expStatus) {
 			t.Errorf("[TEST%d]Failed. Got %v\tExpected %v\n", i, rw.Result().StatusCode, tc.expStatus)
 		}
 

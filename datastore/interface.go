@@ -19,7 +19,9 @@ type BookStore interface {
 
 type AuthorStore interface {
 	GetAllAuthor(ctx context.Context) ([]entities.Author, error)
+	GetAuthorByID(ctx context.Context, id int) (entities.Author, error)
 	CheckAuthor(ctx context.Context, author entities.Author) (int, error)
+	CheckAuthorByID(ctx context.Context, id int) (bool, error)
 	PostAuthor(ctx context.Context, author entities.Author) (int64, error)
 	PutAuthor(ctx context.Context, author entities.Author, id int) (entities.Author, error)
 	DeleteAuthor(ctx context.Context, id int) (int64, error)

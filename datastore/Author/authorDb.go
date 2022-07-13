@@ -82,3 +82,23 @@ func (a Authorstore) DeleteAuthor(ctx context.Context, id int) (int64, error) {
 	}
 	return cnt, err
 }
+
+func (a Authorstore) CheckAuthorByID(ctx context.Context, id int) (bool, error) {
+	_, err := a.db.QueryContext(ctx, "select * from Author WHERE Id=?", id)
+	if err != nil {
+		return false, errors.New("author alreadyexists")
+	}
+	return true, nil
+}
+
+func (a Authorstore) GetAuthorByID(ctx context.Context, id int) (entities.Author, error) {
+	var author entities.Author
+	res := a.db.QueryRowContext(ctx, "select * from Author WHERE Id=?", id)
+	err := res.Scan(&author.Id, &author.FirstName, &author.LastName, &author.PenName, &author.LastName)
+	if err != nil {
+		fmt.Println("hey")
+		return entities.Author{}, err
+	}
+	//fmt.Println("author hi")
+	return author, nil
+}
